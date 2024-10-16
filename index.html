@@ -69,8 +69,7 @@
     <script>
         const numWaves = 20;
         let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25);
-        let maxHeights = Array.from({ length: numWaves * 2 + 1 }, () => 50); // Limite máximo das cristas
-        let minHeights = Array.from({ length: numWaves * 2 + 1 }, () => 0); // Limite mínimo das cristas
+        let maxHeights = Array.from({ length: numWaves * 2 + 1 }, () => 50); // Limite máximo das cristas, inicia em 50
 
         // Inicializa as cristas com valores aleatórios entre 10 e 40
         for (let i = 1; i < waves.length; i += 2) {
@@ -184,48 +183,37 @@
         function adjustCrista(index, newHeight) {
             const peakIndex = index * 2 + 1;
 
-            // Se a nova altura exceder o máximo, mantenha no máximo
-            if (newHeight > maxHeights[peakIndex]) {
-                newHeight = maxHeights[peakIndex];
-            }
-
-            // Atualiza o valor da crista escolhida
+            // Atualiza o valor da crista escolhida e define o novo limite máximo
             waves[peakIndex] = newHeight;
+            maxHeights[peakIndex] = newHeight;
 
-            // Se a nova altura for maior que 25
-            if (newHeight > 25) {
-                // Aumenta as vizinhas se não estiverem travadas
-                adjustNeighbors(index, newHeight, true);
-            } else {
-                // Diminui as vizinhas se não estiverem travadas
-                adjustNeighbors(index, newHeight, false);
-            }
-        }
+            const amplitudeChange = newHeight - waves[peakIndex];
 
-        function adjustNeighbors(index, newHeight, isIncreasing) {
-            const peakIndex = index * 2 + 1;
-            const leftIndex = peakIndex - 2;
-            const rightIndex = peakIndex + 2;
-            const delta = newHeight - waves[peakIndex];
+            // Ajuste proporcional nas cristas vizinhas
+            const influenceRadius = 5; // Ajusta o alcance de influência
+            for (let i = 1; i <= influenceRadius; i++) {
+                const factor = (1 - i / (influenceRadius + 1)); // Ajuste decrescente
 
-            // Ajusta crista da esquerda se não estiver travada
-            if (leftIndex >= 0) {
-                if (isIncreasing && waves[leftIndex] < maxHeights[leftIndex]) {
-                    waves[leftIndex] = Math.min(maxHeights[leftIndex], waves[leftIndex] + delta);
-                } else if (!isIncreasing && waves[leftIndex] > minHeights[leftIndex]) {
-                    waves[leftIndex] = Math.max(minHeights[leftIndex], waves[leftIndex] - delta);
+                if (peakIndex - i >= 0) {
+                    const newValue = waves[peakIndex - i] + amplitudeChange * factor;
+                    waves[peakIndex - i] = Math.min(maxHeights[peakIndex - i], newValue);
+                }
+                if (peakIndex + i < waves.length) {
+                    const newValue = waves[peakIndex + i] + amplitudeChange * factor;
+                    waves[peakIndex + i] = Math.min(maxHeights[peakIndex + i], newValue);
                 }
             }
 
-            // Ajusta crista da direita se não estiver travada
-            if (rightIndex < waves.length) {
-                if (isIncreasing && waves[rightIndex] < maxHeights[rightIndex]) {
-                    waves[rightIndex] = Math.min(maxHeights[rightIndex], waves[rightIndex] + delta);
-                } else if (!isIncreasing && waves[rightIndex] > minHeights[rightIndex]) {
-                    waves[rightIndex] = Math.max(minHeights[rightIndex], waves[rightIndex] - delta);
-                }
+            // Garante que os valores das pontas (início e fim) permaneçam fixos em 25
+            for (let i = 0; i < waves.length; i += 2) {
+                waves[i] = 25;
             }
+
+            // Limita os valores das cristas entre 0 e 50
+            waves = waves.map(val => Math.max(0, Math.min(50, val)));
         }
+
+        waveChartInstance.update();
     </script>
 </body>
 </html>
