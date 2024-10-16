@@ -72,8 +72,12 @@
         
         // Inicializa as cristas com valores aleatórios entre 10 e 40
         for (let i = 1; i < waves.length; i += 2) {
-            waves[i] = Math.random() * 30 + 10; // Gera valores entre 10 e 40
+            waves[i] = Math.random() * 30 + 10;
         }
+
+        // Arrays para armazenar os valores máximos e mínimos atingidos por cada crista
+        const maxValues = [...waves];
+        const minValues = [...waves];
 
         function generateWavePoints() {
             const points = [];
@@ -179,10 +183,18 @@
 
         function adjustCrista(index, newHeight) {
             const peakIndex = index * 2 + 1;
-            const amplitudeChange = newHeight - waves[peakIndex];
+
+            // Limita o novo valor entre o valor mínimo e máximo já atingido
+            const adjustedHeight = Math.max(minValues[peakIndex], Math.min(maxValues[peakIndex], newHeight));
+
+            const amplitudeChange = adjustedHeight - waves[peakIndex];
 
             // Ajusta a altura da crista escolhida
-            waves[peakIndex] = newHeight;
+            waves[peakIndex] = adjustedHeight;
+
+            // Atualiza os valores máximo e mínimo alcançados por essa crista
+            maxValues[peakIndex] = Math.max(maxValues[peakIndex], adjustedHeight);
+            minValues[peakIndex] = Math.min(minValues[peakIndex], adjustedHeight);
 
             // Ajuste proporcional nas cristas vizinhas
             const influenceRadius = 5; // Ajusta o alcance de influência
