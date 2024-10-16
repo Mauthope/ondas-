@@ -7,8 +7,8 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Arial', sans-serif;
+            background-color: #e3f2fd;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -17,36 +17,39 @@
 
         #waveChart {
             width: 95%;
-            max-width: 1400px;
-            margin: 20px auto;
+            max-width: 1200px;
             background: white;
-            border-radius: 8px;
-            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            border-radius: 10px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
             padding: 20px;
+            margin-bottom: 20px;
         }
 
         .controls {
-            text-align: center;
-            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
         }
 
         .controls input, .controls button {
             padding: 10px;
-            margin: 5px;
             font-size: 16px;
             border-radius: 5px;
             border: 1px solid #ddd;
+            margin: 5px;
         }
 
         .controls button {
-            background-color: #007bff;
+            background-color: #42a5f5;
             color: white;
             border: none;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
 
         .controls button:hover {
-            background-color: #0056b3;
+            background-color: #1e88e5;
         }
     </style>
 </head>
@@ -64,21 +67,24 @@
 
     <script>
         const numWaves = 20;
-        let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25); // Pontas fixas em 25
+        let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25);
+        
+        // Inicializa as cristas com valores aleatórios entre 10 e 40
+        for (let i = 1; i < waves.length; i += 2) {
+            waves[i] = Math.random() * 30 + 10; // Gera valores entre 10 e 40
+        }
 
         function generateWavePoints() {
             const points = [];
-
             for (let i = 0; i < numWaves; i++) {
                 const base = i;
                 const peak = base + 0.5;
                 const end = base + 1;
 
-                points.push({ x: base, y: waves[i * 2] }); // Início da onda (fixo em 25)
-                points.push({ x: peak, y: waves[i * 2 + 1] }); // Crista da onda (ajustável)
-                points.push({ x: end, y: waves[(i + 1) * 2] }); // Final da onda (fixo em 25)
+                points.push({ x: base, y: waves[i * 2] });
+                points.push({ x: peak, y: waves[i * 2 + 1] });
+                points.push({ x: end, y: waves[(i + 1) * 2] });
             }
-
             return points;
         }
 
@@ -93,11 +99,11 @@
                     datasets: [{
                         label: 'Altura das Ondas',
                         data: points.map(point => point.y),
-                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                        borderColor: 'rgba(54, 162, 235, 0.8)',
+                        backgroundColor: 'rgba(66, 165, 245, 0.2)',
+                        borderColor: 'rgba(66, 165, 245, 1)',
                         borderWidth: 2,
                         pointRadius: 0,
-                        tension: 0.4, // Suaviza as curvas para criar arcos
+                        tension: 0.4, // Cria uma curva suave
                     }]
                 },
                 options: {
@@ -159,13 +165,13 @@
             const peakIndex = index * 2 + 1;
             const amplitudeChange = newHeight - waves[peakIndex];
 
-            // Ajusta a altura da crista escolhida para o novo valor
+            // Ajusta a altura da crista escolhida
             waves[peakIndex] = newHeight;
 
-            // Ajuste suave nos vizinhos para criar transições mais suaves
-            const influenceRadius = 2;
+            // Ajuste proporcional nas cristas vizinhas
+            const influenceRadius = 5; // Ajusta o alcance de influência
             for (let i = 1; i <= influenceRadius; i++) {
-                const factor = (1 - i / (influenceRadius + 1));
+                const factor = (1 - i / (influenceRadius + 1)); // Ajuste decrescente
 
                 if (peakIndex - i >= 0) {
                     waves[peakIndex - i] += amplitudeChange * factor;
@@ -180,7 +186,7 @@
                 waves[i] = 25;
             }
 
-            // Garante que os valores das cristas não excedam os limites de 0 a 50
+            // Limita os valores das cristas entre 0 e 50
             waves = waves.map(val => Math.max(0, Math.min(50, val)));
         }
 
