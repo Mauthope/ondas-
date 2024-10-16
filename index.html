@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modelo de Ondas com Arcos</title>
+    <title>Modelo de Ondas com Arcos Ajustados</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -16,8 +16,8 @@
         }
 
         #waveChart {
-            width: 90%;
-            max-width: 1200px;
+            width: 95%;
+            max-width: 1400px;
             margin: 20px auto;
             background: white;
             border-radius: 8px;
@@ -55,18 +55,17 @@
         <canvas id="wavesCanvas"></canvas>
     </div>
     <div class="controls">
-        <label for="waveNumber">Número da Onda (1 a 50):</label>
-        <input type="number" id="waveNumber" min="1" max="50" value="5">
+        <label for="waveNumber">Número da Onda (1 a 20):</label>
+        <input type="number" id="waveNumber" min="1" max="20" value="5">
         <label for="waveHeight">Altura da Onda:</label>
         <input type="number" id="waveHeight" value="25" min="0" max="50">
         <button onclick="updateWave()">Atualizar Onda</button>
     </div>
 
     <script>
-        const numWaves = 50;
+        const numWaves = 20;
         let waves = Array.from({ length: numWaves }, () => 25);
 
-        // Função que gera a forma da onda
         function generateWavePoints() {
             const points = [];
 
@@ -75,12 +74,9 @@
                 const peak = base + 0.5;
                 const end = base + 1;
 
-                // Ponto de início (altura base)
-                points.push({ x: base, y: waves[i] });
-                // Ponto de crista (meio da onda)
-                points.push({ x: peak, y: waves[i] + 25 * Math.sin(Math.PI / 2) });
-                // Ponto final (altura base)
-                points.push({ x: end, y: waves[i] });
+                points.push({ x: base, y: waves[i] }); // Início da onda
+                points.push({ x: peak, y: waves[i] + waves[i] * Math.sin(Math.PI / 2) }); // Crista da onda
+                points.push({ x: end, y: waves[i] }); // Final da onda
             }
 
             return points;
@@ -99,9 +95,8 @@
                         data: points.map(point => point.y),
                         backgroundColor: 'rgba(54, 162, 235, 0.2)',
                         borderColor: 'rgba(54, 162, 235, 0.8)',
-                        borderWidth: 3,
-                        pointRadius: 4,
-                        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                        borderWidth: 2,
+                        pointRadius: 0,
                         tension: 0.4, // Suaviza as curvas para criar arcos
                     }]
                 },
@@ -167,15 +162,16 @@
             // Ajusta a onda escolhida para o novo valor
             waves[index] = newHeight;
 
-            // Ajuste suave nos vizinhos
+            // Ajuste suave nos vizinhos para criar transições mais suaves
             const influenceRadius = 2;
-
             for (let i = 1; i <= influenceRadius; i++) {
+                const factor = (1 - i / (influenceRadius + 1));
+
                 if (index - i >= 0) {
-                    waves[index - i] += amplitudeChange * (1 - i / (influenceRadius + 1));
+                    waves[index - i] += amplitudeChange * factor;
                 }
                 if (index + i < numWaves) {
-                    waves[index + i] += amplitudeChange * (1 - i / (influenceRadius + 1));
+                    waves[index + i] += amplitudeChange * factor;
                 }
             }
 
