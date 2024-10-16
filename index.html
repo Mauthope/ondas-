@@ -64,7 +64,7 @@
 
     <script>
         const numWaves = 20;
-        let waves = Array.from({ length: numWaves * 2 }, () => 25);
+        let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25); // Pontas fixas em 25
 
         function generateWavePoints() {
             const points = [];
@@ -74,9 +74,9 @@
                 const peak = base + 0.5;
                 const end = base + 1;
 
-                points.push({ x: base, y: waves[i * 2] }); // Início da onda
-                points.push({ x: peak, y: waves[i * 2 + 1] }); // Crista da onda
-                points.push({ x: end, y: waves[(i + 1) * 2] }); // Final da onda
+                points.push({ x: base, y: waves[i * 2] }); // Início da onda (fixo em 25)
+                points.push({ x: peak, y: waves[i * 2 + 1] }); // Crista da onda (ajustável)
+                points.push({ x: end, y: waves[(i + 1) * 2] }); // Final da onda (fixo em 25)
             }
 
             return points;
@@ -175,7 +175,12 @@
                 }
             }
 
-            // Garante que os valores das ondas não excedam os limites de 0 a 50
+            // Garante que os valores das pontas (início e fim) permaneçam fixos em 25
+            for (let i = 0; i < waves.length; i += 2) {
+                waves[i] = 25;
+            }
+
+            // Garante que os valores das cristas não excedam os limites de 0 a 50
             waves = waves.map(val => Math.max(0, Math.min(50, val)));
         }
 
