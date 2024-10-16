@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modelo de Ondas com Arcos Ajustados</title>
+    <title>Modelo de Ondas com Ajuste por Crista</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -55,16 +55,16 @@
         <canvas id="wavesCanvas"></canvas>
     </div>
     <div class="controls">
-        <label for="waveNumber">Número da Onda (1 a 20):</label>
-        <input type="number" id="waveNumber" min="1" max="20" value="5">
-        <label for="waveHeight">Altura da Onda:</label>
-        <input type="number" id="waveHeight" value="25" min="0" max="50">
-        <button onclick="updateWave()">Atualizar Onda</button>
+        <label for="cristaNumber">Número da Crista (0.5 a 19.5):</label>
+        <input type="number" id="cristaNumber" min="0.5" max="19.5" step="0.5" value="5.5">
+        <label for="cristaHeight">Altura da Crista:</label>
+        <input type="number" id="cristaHeight" value="25" min="0" max="50">
+        <button onclick="updateCrista()">Atualizar Crista</button>
     </div>
 
     <script>
         const numWaves = 20;
-        let waves = Array.from({ length: numWaves }, () => 25);
+        let waves = Array.from({ length: numWaves * 2 }, () => 25);
 
         function generateWavePoints() {
             const points = [];
@@ -74,9 +74,9 @@
                 const peak = base + 0.5;
                 const end = base + 1;
 
-                points.push({ x: base, y: waves[i] }); // Início da onda
-                points.push({ x: peak, y: waves[i] + waves[i] * Math.sin(Math.PI / 2) }); // Crista da onda
-                points.push({ x: end, y: waves[i] }); // Final da onda
+                points.push({ x: base, y: waves[i * 2] }); // Início da onda
+                points.push({ x: peak, y: waves[i * 2 + 1] }); // Crista da onda
+                points.push({ x: end, y: waves[(i + 1) * 2] }); // Final da onda
             }
 
             return points;
@@ -145,33 +145,33 @@
 
         let waveChartInstance = drawChart();
 
-        function updateWave() {
-            const waveNumber = parseInt(document.getElementById('waveNumber').value) - 1;
-            const newHeight = parseFloat(document.getElementById('waveHeight').value);
+        function updateCrista() {
+            const cristaNumber = parseFloat(document.getElementById('cristaNumber').value);
+            const newHeight = parseFloat(document.getElementById('cristaHeight').value);
+            const index = Math.floor(cristaNumber);
 
-            if (waveNumber >= 0 && waveNumber < numWaves) {
-                adjustWave(waveNumber, newHeight);
-                waveChartInstance.destroy(); // Remove o gráfico antigo
-                waveChartInstance = drawChart(); // Desenha o novo gráfico atualizado
-            }
+            adjustCrista(index, newHeight);
+            waveChartInstance.destroy(); // Remove o gráfico antigo
+            waveChartInstance = drawChart(); // Desenha o novo gráfico atualizado
         }
 
-        function adjustWave(index, newHeight) {
-            const amplitudeChange = newHeight - waves[index];
+        function adjustCrista(index, newHeight) {
+            const peakIndex = index * 2 + 1;
+            const amplitudeChange = newHeight - waves[peakIndex];
 
-            // Ajusta a onda escolhida para o novo valor
-            waves[index] = newHeight;
+            // Ajusta a altura da crista escolhida para o novo valor
+            waves[peakIndex] = newHeight;
 
             // Ajuste suave nos vizinhos para criar transições mais suaves
             const influenceRadius = 2;
             for (let i = 1; i <= influenceRadius; i++) {
                 const factor = (1 - i / (influenceRadius + 1));
 
-                if (index - i >= 0) {
-                    waves[index - i] += amplitudeChange * factor;
+                if (peakIndex - i >= 0) {
+                    waves[peakIndex - i] += amplitudeChange * factor;
                 }
-                if (index + i < numWaves) {
-                    waves[index + i] += amplitudeChange * factor;
+                if (peakIndex + i < waves.length) {
+                    waves[peakIndex + i] += amplitudeChange * factor;
                 }
             }
 
