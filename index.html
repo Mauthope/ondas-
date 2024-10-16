@@ -142,6 +142,19 @@
                                 }
                             }
                         }
+                    },
+                    animations: {
+                        tension: {
+                            duration: 500, // Duração da animação
+                            easing: 'easeInOutQuad', // Tipo de animação
+                            from: 0.5, // De uma tensão mais baixa
+                            to: 0, // Para tensão 0
+                            loop: false // Não loop
+                        },
+                        height: {
+                            duration: 500, // Duração da animação
+                            easing: 'easeInOutQuad' // Tipo de animação
+                        }
                     }
                 }
             });
