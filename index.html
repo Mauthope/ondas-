@@ -69,15 +69,14 @@
     <script>
         const numWaves = 20;
         let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25);
-        
+        let maxHeights = Array.from({ length: numWaves * 2 + 1 }, () => 50); // Limite máximo das cristas, inicia em 50
+
         // Inicializa as cristas com valores aleatórios entre 10 e 40
         for (let i = 1; i < waves.length; i += 2) {
-            waves[i] = Math.random() * 30 + 10;
+            const randomValue = Math.random() * 30 + 10; // Gera valores entre 10 e 40
+            waves[i] = randomValue;
+            maxHeights[i] = randomValue; // Define o valor inicial como o limite máximo
         }
-
-        // Arrays para armazenar os valores máximos e mínimos atingidos por cada crista
-        const maxValues = [...waves];
-        const minValues = [...waves];
 
         function generateWavePoints() {
             const points = [];
@@ -184,17 +183,11 @@
         function adjustCrista(index, newHeight) {
             const peakIndex = index * 2 + 1;
 
-            // Limita o novo valor entre o valor mínimo e máximo já atingido
-            const adjustedHeight = Math.max(minValues[peakIndex], Math.min(maxValues[peakIndex], newHeight));
+            // Atualiza o valor da crista escolhida e define o novo limite máximo
+            waves[peakIndex] = newHeight;
+            maxHeights[peakIndex] = newHeight;
 
-            const amplitudeChange = adjustedHeight - waves[peakIndex];
-
-            // Ajusta a altura da crista escolhida
-            waves[peakIndex] = adjustedHeight;
-
-            // Atualiza os valores máximo e mínimo alcançados por essa crista
-            maxValues[peakIndex] = Math.max(maxValues[peakIndex], adjustedHeight);
-            minValues[peakIndex] = Math.min(minValues[peakIndex], adjustedHeight);
+            const amplitudeChange = newHeight - waves[peakIndex];
 
             // Ajuste proporcional nas cristas vizinhas
             const influenceRadius = 5; // Ajusta o alcance de influência
@@ -202,10 +195,12 @@
                 const factor = (1 - i / (influenceRadius + 1)); // Ajuste decrescente
 
                 if (peakIndex - i >= 0) {
-                    waves[peakIndex - i] += amplitudeChange * factor;
+                    const newValue = waves[peakIndex - i] + amplitudeChange * factor;
+                    waves[peakIndex - i] = Math.min(maxHeights[peakIndex - i], newValue);
                 }
                 if (peakIndex + i < waves.length) {
-                    waves[peakIndex + i] += amplitudeChange * factor;
+                    const newValue = waves[peakIndex + i] + amplitudeChange * factor;
+                    waves[peakIndex + i] = Math.min(maxHeights[peakIndex + i], newValue);
                 }
             }
 
