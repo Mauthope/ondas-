@@ -97,16 +97,26 @@
                 type: 'line',
                 data: {
                     labels: points.map(point => point.x.toFixed(2)),
-                    datasets: [{
-                        label: 'Altura das Ondas',
-                        data: points.map(point => point.y),
-                        backgroundColor: 'rgba(66, 165, 245, 0.2)',
-                        borderColor: 'rgba(66, 165, 245, 1)',
-                        borderWidth: 2,
-                        pointRadius: 5, // Tamanho da bolinha nas cristas
-                        pointBackgroundColor: 'rgba(66, 165, 245, 1)', // Cor das bolinhas
-                        tension: 0.4, // Cria uma curva suave
-                    }]
+                    datasets: [
+                        {
+                            label: 'Altura das Ondas',
+                            data: points.map(point => point.y),
+                            backgroundColor: 'rgba(66, 165, 245, 0.2)',
+                            borderColor: 'rgba(66, 165, 245, 1)',
+                            borderWidth: 2,
+                            pointRadius: points.map(point => (point.x % 1 === 0.5 ? 5 : 0)), // Bolinhas apenas nas cristas
+                            pointBackgroundColor: points.map(point => (point.x % 1 === 0.5 ? 'red' : 'rgba(66, 165, 245, 1)')),
+                            tension: 0.4, // Cria uma curva suave
+                        },
+                        {
+                            label: 'Linha de Referência (25)',
+                            data: new Array(points.length).fill(25),
+                            borderColor: 'red',
+                            borderWidth: 1,
+                            borderDash: [5, 5], // Linha tracejada
+                            fill: false,
+                        }
+                    ]
                 },
                 options: {
                     scales: {
