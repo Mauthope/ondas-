@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Propagação de Ondas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        #waveChart {
+            max-width: 800px;
+            margin: 20px auto;
+        }
+        .controls {
+            text-align: center;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="waveChart">
+        <canvas id="wavesCanvas"></canvas>
+    </div>
+    <div class="controls">
+        <label for="waveNumber">Número da Onda (1 a 50):</label>
+        <input type="number" id="waveNumber" min="1" max="50" value="5">
+        <label for="waveHeight">Altura da Onda:</label>
+        <input type="number" id="waveHeight" value="5">
+        <button onclick="updateWave()">Atualizar Onda</button>
+    </div>
+
+    <script>
+        // Parâmetros iniciais
+        const numWaves = 50;
+        let alpha = 0.1; // Intensidade de propagação
+        let waves = new Array(numWaves).fill(5); // Altura inicial de cada onda
+
+        // Função para criar e atualizar o gráfico
+        const ctx = document.getElementById('wavesCanvas').getContext('2d');
+        const waveChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: Array.from({ length: numWaves }, (_, i) => i + 1),
+                datasets: [{
+                    label: 'Altura das Ondas',
+                    data: waves,
+                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 2,
+                    pointRadius: 3,
+                    pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                }]
+            },
+            options: {
+                scales: {
+                    x: {
+                        title: {
+                            display: true,
+                            text: 'Número da Onda'
+                        }
+                    },
+                    y: {
+                        title: {
+                            display: true,
+                            text: 'Altura'
+                        },
+                        min: 0,
+                        max: 20
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false,
+            }
+        });
+
+        // Função para atualizar a altura de uma onda específica
+        function updateWave() {
+            const waveNumber = parseInt(document.getElementById('waveNumber').value) - 1;
+            const newHeight = parseFloat(document.getElementById('waveHeight').value);
+
+            // Atualiza a altura da onda selecionada
+            if (waveNumber >= 0 && waveNumber < numWaves) {
+                waves[waveNumber] = newHeight;
+                propagateWaves();
+                waveChart.update();
+            }
+        }
+
+        // Função de propagação das ondas
+        function propagateWaves() {
+            let newWaves = [...waves];
+
+            // Itera sobre cada onda, exceto nas bordas
+            for (let i = 1; i < numWaves - 1; i++) {
+                newWaves[i] = waves[i] + alpha * (waves[i - 1] - 2 * waves[i] + waves[i + 1]);
+            }
+
+            // Condições de contorno
+            newWaves[0] = newWaves[1];
+            newWaves[numWaves - 1] = newWaves[numWaves - 2];
+
+            waves = newWaves;
+        }
+    </script>
+</body>
+</html>
