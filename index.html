@@ -23,6 +23,7 @@
             box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
             padding: 20px;
             margin-bottom: 20px;
+            height: 400px; /* Aumenta a altura do gráfico */
         }
 
         .controls {
@@ -102,7 +103,8 @@
                         backgroundColor: 'rgba(66, 165, 245, 0.2)',
                         borderColor: 'rgba(66, 165, 245, 1)',
                         borderWidth: 2,
-                        pointRadius: 0,
+                        pointRadius: 5, // Tamanho da bolinha nas cristas
+                        pointBackgroundColor: 'rgba(66, 165, 245, 1)', // Cor das bolinhas
                         tension: 0.4, // Cria uma curva suave
                     }]
                 },
