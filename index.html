@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Propagação de Ondas</title>
+    <title>Modelo de Ondas Senoidais</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -64,8 +64,7 @@
 
     <script>
         const numWaves = 50;
-        let alpha = 0.5; // Intensidade de propagação para suavizar a transição
-        let waves = Array.from({ length: numWaves }, () => Math.random() * 40 + 10);
+        let waves = Array.from({ length: numWaves }, (_, i) => Math.sin(i / 3) * 25 + 25);
 
         const ctx = document.getElementById('wavesCanvas').getContext('2d');
         const waveChart = new Chart(ctx, {
@@ -125,28 +124,33 @@
             const newHeight = parseFloat(document.getElementById('waveHeight').value);
 
             if (waveNumber >= 0 && waveNumber < numWaves) {
-                waves[waveNumber] = newHeight;
-                propagateWaves();
+                adjustWave(waveNumber, newHeight);
                 waveChart.update();
             }
         }
 
-        function propagateWaves() {
-            let newWaves = [...waves];
+        function adjustWave(index, newHeight) {
+            const amplitudeChange = newHeight - waves[index];
 
-            // Suavizar a transição entre as ondas
-            for (let i = 1; i < numWaves - 1; i++) {
-                newWaves[i] = (waves[i - 1] + waves[i] + waves[i + 1]) / 3;
+            // Ajusta a onda escolhida para o novo valor
+            waves[index] = newHeight;
+
+            // Ajuste suave nos vizinhos
+            const influenceRadius = 2; // Alcance de ondas que serão influenciadas pela mudança
+
+            for (let i = 1; i <= influenceRadius; i++) {
+                if (index - i >= 0) {
+                    waves[index - i] += amplitudeChange * (1 - i / (influenceRadius + 1));
+                }
+                if (index + i < numWaves) {
+                    waves[index + i] += amplitudeChange * (1 - i / (influenceRadius + 1));
+                }
             }
 
-            // Ajustar as ondas nas bordas para manter a continuidade
-            newWaves[0] = (waves[0] + waves[1]) / 2;
-            newWaves[numWaves - 1] = (waves[numWaves - 2] + waves[numWaves - 1]) / 2;
-
-            waves = newWaves;
+            // Garante que os valores das ondas não excedam os limites de 0 a 50
+            waves = waves.map(val => Math.max(0, Math.min(50, val)));
         }
 
-        propagateWaves();
         waveChart.update();
     </script>
 </body>
