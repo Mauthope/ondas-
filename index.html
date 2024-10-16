@@ -23,7 +23,7 @@
             box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
             padding: 20px;
             margin-bottom: 20px;
-            height: 600px; /* Ajuste de altura */
+            height: 400px;
         }
 
         .controls {
@@ -69,12 +69,14 @@
     <script>
         const numWaves = 20;
         let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25);
-        let maxHeights = Array.from({ length: numWaves * 2 + 1 }, () => 50);
+        let maxHeights = Array.from({ length: numWaves * 2 + 1 }, () => 50); // Limite máximo das cristas
+        let minHeights = Array.from({ length: numWaves * 2 + 1 }, () => 0); // Limite mínimo das cristas
 
+        // Inicializa as cristas com valores aleatórios entre 10 e 40
         for (let i = 1; i < waves.length; i += 2) {
-            const randomValue = Math.random() * 30 + 10;
+            const randomValue = Math.random() * 30 + 10; // Gera valores entre 10 e 40
             waves[i] = randomValue;
-            maxHeights[i] = randomValue;
+            maxHeights[i] = randomValue; // Define o valor inicial como o limite máximo
         }
 
         function generateWavePoints() {
@@ -106,16 +108,16 @@
                             backgroundColor: 'rgba(66, 165, 245, 0.2)',
                             borderColor: 'rgba(66, 165, 245, 1)',
                             borderWidth: 2,
-                            pointRadius: points.map(point => (point.x % 1 === 0.5 ? 5 : 0)),
+                            pointRadius: points.map(point => (point.x % 1 === 0.5 ? 5 : 0)), // Bolinhas apenas nas cristas
                             pointBackgroundColor: points.map(point => (point.x % 1 === 0.5 ? 'red' : 'rgba(66, 165, 245, 1)')),
-                            tension: 0.4,
+                            tension: 0.4, // Cria uma curva suave
                         },
                         {
                             label: 'Linha de Referência (25)',
                             data: new Array(points.length).fill(25),
                             borderColor: 'red',
                             borderWidth: 1,
-                            borderDash: [5, 5],
+                            borderDash: [5, 5], // Linha tracejada
                             fill: false,
                         }
                     ]
@@ -158,8 +160,8 @@
                         }
                     },
                     animation: {
-                        duration: 1000,
-                        easing: 'easeInOutCubic'
+                        duration: 1000, // Duração da animação em milissegundos (1 segundo)
+                        easing: 'easeInOutCubic' // Efeito de suavização
                     }
                 }
             });
@@ -175,53 +177,42 @@
             const index = Math.floor(cristaNumber);
 
             adjustCrista(index, newHeight);
-            waveChartInstance.destroy();
-            waveChartInstance = drawChart();
+            waveChartInstance.destroy(); // Remove o gráfico antigo
+            waveChartInstance = drawChart(); // Desenha o novo gráfico atualizado
         }
 
         function adjustCrista(index, newHeight) {
             const peakIndex = index * 2 + 1;
+            const oldHeight = waves[peakIndex];
+            const heightChange = newHeight - oldHeight;
 
+            // Atualiza o valor da crista escolhida e define o novo limite máximo
             waves[peakIndex] = newHeight;
-            maxHeights[peakIndex] = newHeight;
+            maxHeights[peakIndex] = newHeight; // Define o novo máximo
+            minHeights[peakIndex] = Math.min(minHeights[peakIndex], newHeight); // Atualiza o mínimo se necessário
 
-            let remainingAmplitude = newHeight - waves[peakIndex];
-            const influenceRadius = 5;
+            // Ajusta cristas vizinhas
+            const leftIndex = peakIndex - 2;
+            const rightIndex = peakIndex + 2;
 
-            for (let i = 1; i <= influenceRadius; i++) {
-                const factor = (1 - i / (influenceRadius + 1));
-
-                if (peakIndex - i >= 0 && remainingAmplitude !== 0) {
-                    const newValueLeft = waves[peakIndex - i] + remainingAmplitude * factor;
-                    if (newValueLeft <= maxHeights[peakIndex - i]) {
-                        waves[peakIndex - i] = newValueLeft;
-                        remainingAmplitude = 0;
-                    } else {
-                        remainingAmplitude -= (newValueLeft - maxHeights[peakIndex - i]) / factor;
-                        waves[peakIndex - i] = maxHeights[peakIndex - i];
-                    }
+            if (newHeight > 25) {
+                // Aumenta as cristas vizinhas se elas estiverem abaixo de 25 e não travadas
+                if (leftIndex >= 0 && waves[leftIndex] < 25 && waves[leftIndex] < maxHeights[leftIndex]) {
+                    waves[leftIndex] = Math.min(25, waves[leftIndex] + heightChange);
                 }
-
-                if (peakIndex + i < waves.length && remainingAmplitude !== 0) {
-                    const newValueRight = waves[peakIndex + i] + remainingAmplitude * factor;
-                    if (newValueRight <= maxHeights[peakIndex + i]) {
-                        waves[peakIndex + i] = newValueRight;
-                        remainingAmplitude = 0;
-                    } else {
-                        remainingAmplitude -= (newValueRight - maxHeights[peakIndex + i]) / factor;
-                        waves[peakIndex + i] = maxHeights[peakIndex + i];
-                    }
+                if (rightIndex < waves.length && waves[rightIndex] < 25 && waves[rightIndex] < maxHeights[rightIndex]) {
+                    waves[rightIndex] = Math.min(25, waves[rightIndex] + heightChange);
+                }
+            } else {
+                // Diminui as cristas vizinhas se elas estiverem acima de 25 e não travadas
+                if (leftIndex >= 0 && waves[leftIndex] > 25 && waves[leftIndex] > minHeights[leftIndex]) {
+                    waves[leftIndex] = Math.max(25, waves[leftIndex] - heightChange);
+                }
+                if (rightIndex < waves.length && waves[rightIndex] > 25 && waves[rightIndex] > minHeights[rightIndex]) {
+                    waves[rightIndex] = Math.max(25, waves[rightIndex] - heightChange);
                 }
             }
-
-            for (let i = 0; i < waves.length; i += 2) {
-                waves[i] = 25;
-            }
-
-            waves = waves.map(val => Math.max(0, Math.min(50, val)));
         }
-
-        waveChartInstance.update();
     </script>
 </body>
 </html>
