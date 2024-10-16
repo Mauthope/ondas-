@@ -6,13 +6,47 @@
     <title>Propagação de Ondas</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        #waveChart {
-            max-width: 800px;
-            margin: 20px auto;
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
         }
+
+        #waveChart {
+            width: 90%;
+            max-width: 1000px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
         .controls {
             text-align: center;
             margin-top: 20px;
+        }
+
+        .controls input, .controls button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .controls button {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+
+        .controls button:hover {
+            background-color: #0056b3;
         }
     </style>
 </head>
@@ -32,7 +66,9 @@
         // Parâmetros iniciais
         const numWaves = 50;
         let alpha = 0.1; // Intensidade de propagação
-        let waves = new Array(numWaves).fill(5); // Altura inicial de cada onda
+
+        // Inicializar as alturas das ondas com valores aleatórios
+        let waves = Array.from({ length: numWaves }, () => Math.random() * 10 + 5);
 
         // Função para criar e atualizar o gráfico
         const ctx = document.getElementById('wavesCanvas').getContext('2d');
@@ -44,9 +80,9 @@
                     label: 'Altura das Ondas',
                     data: waves,
                     backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgba(54, 162, 235, 1)',
-                    borderWidth: 2,
-                    pointRadius: 3,
+                    borderColor: 'rgba(54, 162, 235, 0.8)',
+                    borderWidth: 3,
+                    pointRadius: 4,
                     pointBackgroundColor: 'rgba(54, 162, 235, 1)',
                 }]
             },
@@ -55,13 +91,19 @@
                     x: {
                         title: {
                             display: true,
-                            text: 'Número da Onda'
+                            text: 'Número da Onda',
+                            font: {
+                                size: 16
+                            }
                         }
                     },
                     y: {
                         title: {
                             display: true,
-                            text: 'Altura'
+                            text: 'Altura',
+                            font: {
+                                size: 16
+                            }
                         },
                         min: 0,
                         max: 20
@@ -69,6 +111,16 @@
                 },
                 responsive: true,
                 maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: true,
+                        labels: {
+                            font: {
+                                size: 14
+                            }
+                        }
+                    }
+                }
             }
         });
 
