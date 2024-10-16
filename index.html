@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modelo de Ondas Senoidais</title>
+    <title>Modelo de Ondas com Arcos</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -64,60 +64,91 @@
 
     <script>
         const numWaves = 50;
-        let waves = Array.from({ length: numWaves }, (_, i) => Math.sin(i / 3) * 25 + 25);
+        let waves = Array.from({ length: numWaves }, () => 25);
 
-        const ctx = document.getElementById('wavesCanvas').getContext('2d');
-        const waveChart = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: Array.from({ length: numWaves }, (_, i) => i + 1),
-                datasets: [{
-                    label: 'Altura das Ondas',
-                    data: waves,
-                    backgroundColor: 'rgba(54, 162, 235, 0.2)',
-                    borderColor: 'rgba(54, 162, 235, 0.8)',
-                    borderWidth: 3,
-                    pointRadius: 4,
-                    pointBackgroundColor: 'rgba(54, 162, 235, 1)',
-                }]
-            },
-            options: {
-                scales: {
-                    x: {
-                        title: {
-                            display: true,
-                            text: 'Número da Onda',
-                            font: {
-                                size: 16
-                            }
+        // Função que gera a forma da onda
+        function generateWavePoints() {
+            const points = [];
+
+            for (let i = 0; i < numWaves; i++) {
+                const base = i;
+                const peak = base + 0.5;
+                const end = base + 1;
+
+                // Ponto de início (altura base)
+                points.push({ x: base, y: waves[i] });
+                // Ponto de crista (meio da onda)
+                points.push({ x: peak, y: waves[i] + 25 * Math.sin(Math.PI / 2) });
+                // Ponto final (altura base)
+                points.push({ x: end, y: waves[i] });
+            }
+
+            return points;
+        }
+
+        function drawChart() {
+            const points = generateWavePoints();
+            const ctx = document.getElementById('wavesCanvas').getContext('2d');
+
+            const waveChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: points.map(point => point.x.toFixed(2)),
+                    datasets: [{
+                        label: 'Altura das Ondas',
+                        data: points.map(point => point.y),
+                        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+                        borderColor: 'rgba(54, 162, 235, 0.8)',
+                        borderWidth: 3,
+                        pointRadius: 4,
+                        pointBackgroundColor: 'rgba(54, 162, 235, 1)',
+                        tension: 0.4, // Suaviza as curvas para criar arcos
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Número da Onda',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            min: 0,
+                            max: numWaves
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Altura',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            min: 0,
+                            max: 75
                         }
                     },
-                    y: {
-                        title: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
                             display: true,
-                            text: 'Altura',
-                            font: {
-                                size: 16
-                            }
-                        },
-                        min: 0,
-                        max: 50
-                    }
-                },
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: true,
-                        labels: {
-                            font: {
-                                size: 14
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
                             }
                         }
                     }
                 }
-            }
-        });
+            });
+
+            return waveChart;
+        }
+
+        let waveChartInstance = drawChart();
 
         function updateWave() {
             const waveNumber = parseInt(document.getElementById('waveNumber').value) - 1;
@@ -125,7 +156,8 @@
 
             if (waveNumber >= 0 && waveNumber < numWaves) {
                 adjustWave(waveNumber, newHeight);
-                waveChart.update();
+                waveChartInstance.destroy(); // Remove o gráfico antigo
+                waveChartInstance = drawChart(); // Desenha o novo gráfico atualizado
             }
         }
 
@@ -136,7 +168,7 @@
             waves[index] = newHeight;
 
             // Ajuste suave nos vizinhos
-            const influenceRadius = 2; // Alcance de ondas que serão influenciadas pela mudança
+            const influenceRadius = 2;
 
             for (let i = 1; i <= influenceRadius; i++) {
                 if (index - i >= 0) {
@@ -151,7 +183,7 @@
             waves = waves.map(val => Math.max(0, Math.min(50, val)));
         }
 
-        waveChart.update();
+        waveChartInstance.update();
     </script>
 </body>
 </html>
