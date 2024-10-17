@@ -33,7 +33,7 @@
     </div>
 
     <script>
-        const numWaves = 60;
+        const numWaves = 180; // Ajustado para 180 cristas
         let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25);
 
         // Inicializa as cristas com valores aleatórios entre 10 e 40, arredondados para números inteiros
@@ -95,7 +95,7 @@
                                 }
                             },
                             min: 0,
-                            max: numWaves, // Ajusta para que todas as 60 ondas sejam visíveis
+                            max: numWaves, // Ajusta para que todas as 180 ondas sejam visíveis
                             ticks: {
                                 stepSize: 1
                             }
