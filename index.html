@@ -25,33 +25,6 @@
             margin-bottom: 20px;
             height: 400px;
         }
-
-        .controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .controls input, .controls button {
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            margin: 5px;
-        }
-
-        .controls button {
-            background-color: #42a5f5;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .controls button:hover {
-            background-color: #1e88e5;
-        }
     </style>
 </head>
 <body>
@@ -62,14 +35,11 @@
     <script>
         const numWaves = 20;
         let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25);
-
-        // Inicializa as cristas com valores inteiros aleatórios entre 10 e 40
+        
+        // Inicializa as cristas com valores aleatórios entre 10 e 40
         for (let i = 1; i < waves.length; i += 2) {
-            waves[i] = Math.round(Math.random() * 30 + 10); // Gera valores entre 10 e 40 e arredonda
+            waves[i] = Math.random() * 30 + 10; // Gera valores entre 10 e 40
         }
-
-        const screwImage = new Image();
-        screwImage.src = 'https://www.google.com/url?sa=i&url=https%3A%2F%2Fpt.vecteezy.com%2Farte-vetorial%2F23887560-vetor-de-icone-de-parafuso&psig=AOvVaw2otNP9E8_o-yJEYZyTr4GD&ust=1729263260097000&source=images&cd=vfe&opi=89978449&ved=0CBQQjRxqFwoTCMjU7enVlYkDFQAAAAAdAAAAABAE'; // Insira o URL da imagem de parafuso aqui
 
         function generateWavePoints() {
             const points = [];
@@ -151,34 +121,24 @@
                             }
                         },
                         tooltip: {
-                            callbacks: {
-                                // Customiza tooltip para mostrar valores arredondados
-                                label: function(context) {
-                                    return `Altura: ${Math.round(context.parsed.y)}`;
+                            enabled: false // Desativa tooltips padrão para melhor controle
+                        }
+                    },
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const point = points[index];
+
+                            // Verifica se o ponto clicado é uma crista (x % 1 === 0.5)
+                            if (point.x % 1 === 0.5) {
+                                const newHeight = prompt("Insira a nova altura para a crista:", point.y);
+                                if (newHeight !== null && !isNaN(newHeight)) {
+                                    adjustCrista(Math.floor(point.x), parseFloat(newHeight));
+                                    waveChartInstance.destroy();
+                                    waveChartInstance = drawChart();
                                 }
                             }
                         }
-                    },
-                    animation: {
-                        duration: 1000,
-                        easing: 'easeInOutCubic'
-                    },
-                    // Função para desenhar os parafusos no gráfico
-                    onAfterDraw: (chart) => {
-                        const ctx = chart.ctx;
-                        const xAxis = chart.scales.x;
-                        const yAxis = chart.scales.y;
-
-                        // Desenha parafusos nas cristas
-                        chart.data.datasets[0].data.forEach((value, index) => {
-                            if (index % 3 === 1) { // Verifica se é uma crista
-                                const x = xAxis.getPixelForValue(index / 3 + 0.5);
-                                const y = yAxis.getPixelForValue(value);
-
-                                // Ajuste a posição do parafuso (desenhando logo acima da crista)
-                                ctx.drawImage(screwImage, x - 10, y - 40, 20, 20); // Ajuste a largura e altura conforme necessário
-                            }
-                        });
                     }
                 }
             });
@@ -186,9 +146,38 @@
             return waveChart;
         }
 
-        screwImage.onload = () => {
-            let waveChartInstance = drawChart();
-        };
+        let waveChartInstance = drawChart();
+
+        function adjustCrista(index, newHeight) {
+            const peakIndex = index * 2 + 1;
+            const amplitudeChange = newHeight - waves[peakIndex];
+
+            // Ajusta a altura da crista escolhida
+            waves[peakIndex] = newHeight;
+
+            // Ajuste proporcional nas cristas vizinhas
+            const influenceRadius = 5; // Ajusta o alcance de influência
+            for (let i = 1; i <= influenceRadius; i++) {
+                const factor = (1 - i / (influenceRadius + 1)); // Ajuste decrescente
+
+                if (peakIndex - i >= 0) {
+                    waves[peakIndex - i] += amplitudeChange * factor;
+                }
+                if (peakIndex + i < waves.length) {
+                    waves[peakIndex + i] += amplitudeChange * factor;
+                }
+            }
+
+            // Garante que os valores das pontas (início e fim) permaneçam fixos em 25
+            for (let i = 0; i < waves.length; i += 2) {
+                waves[i] = 25;
+            }
+
+            // Limita os valores das cristas entre 0 e 50
+            waves = waves.map(val => Math.max(0, Math.min(50, val)));
+        }
+
+        waveChartInstance.update();
     </script>
 </body>
 </html>
