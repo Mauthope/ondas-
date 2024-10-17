@@ -33,12 +33,13 @@
     </div>
 
     <script>
-        const numWaves = 180; // Ajustado para 180 cristas
-        let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25);
+        const numWaves = 60; // Total de cristas (60)
+        let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25); // Inicialmente todas as alturas são 25
 
-        // Inicializa as cristas com valores aleatórios entre 20 e 30, arredondados para números inteiros
-        for (let i = 1; i < waves.length; i += 2) {
-            waves[i] = Math.round(Math.random() * 10 + 20); // Gera valores entre 20 e 30 e arredonda
+        // Ajusta 15 cristas aleatórias para valores entre 20 e 30
+        for (let i = 0; i < 15; i++) {
+            const randomIndex = Math.floor(Math.random() * numWaves) * 2 + 1; // Seleciona um índice de crista aleatório
+            waves[randomIndex] = Math.round(Math.random() * 10 + 20); // Gera valores entre 20 e 30 arredondados
         }
 
         function generateWavePoints() {
