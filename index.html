@@ -36,9 +36,9 @@
         const numWaves = 180; // Ajustado para 180 cristas
         let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25);
 
-        // Inicializa as cristas com valores aleatórios entre 10 e 40, arredondados para números inteiros
+        // Inicializa as cristas com valores aleatórios entre 20 e 30, arredondados para números inteiros
         for (let i = 1; i < waves.length; i += 2) {
-            waves[i] = Math.round(Math.random() * 30 + 10); // Gera valores entre 10 e 40 e arredonda
+            waves[i] = Math.round(Math.random() * 10 + 20); // Gera valores entre 20 e 30 e arredonda
         }
 
         function generateWavePoints() {
@@ -95,7 +95,7 @@
                                 }
                             },
                             min: 0,
-                            max: numWaves, // Ajusta para que todas as 180 ondas sejam visíveis
+                            max: numWaves,
                             ticks: {
                                 stepSize: 1
                             }
@@ -124,10 +124,7 @@
                             }
                         }
                     },
-                    animation: {
-                        duration: 1000,
-                        easing: 'easeInOutCubic'
-                    }
+                    animation: false // Desativa animações para evitar movimento ao atualizar o gráfico
                 }
             });
 
@@ -143,13 +140,13 @@
                 const selectedPoint = waveChartInstance.data.labels[pointIndex];
                 
                 if (selectedPoint % 1 === 0.5) {
-                    const newHeight = parseFloat(prompt('Digite a nova altura para a crista:'));
-                    if (!isNaN(newHeight) && newHeight >= 0 && newHeight <= 50) {
+                    const newHeight = parseFloat(prompt('Digite a nova altura para a crista (20-30):'));
+                    if (!isNaN(newHeight) && newHeight >= 20 && newHeight <= 30) {
                         adjustCrista(Math.floor(selectedPoint), newHeight);
                         waveChartInstance.destroy();
                         waveChartInstance = drawChart();
                     } else {
-                        alert('Por favor, insira um valor entre 0 e 50.');
+                        alert('Por favor, insira um valor entre 20 e 30.');
                     }
                 }
             }
