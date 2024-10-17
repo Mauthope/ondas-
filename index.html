@@ -70,7 +70,7 @@
                             backgroundColor: 'rgba(66, 165, 245, 0.2)',
                             borderColor: 'rgba(66, 165, 245, 1)',
                             borderWidth: 2,
-                            pointRadius: points.map(point => (point.x % 1 === 0.5 ? 5 : 0)),
+                            pointRadius: points.map(point => (point.x % 1 === 0.5 ? 3 : 0)), // Bolinhas menores e apenas nas cristas
                             pointBackgroundColor: points.map(point => (point.x % 1 === 0.5 ? 'red' : 'rgba(66, 165, 245, 1)')),
                             tension: 0.4,
                         },
@@ -81,6 +81,7 @@
                             borderWidth: 1,
                             borderDash: [5, 5],
                             fill: false,
+                            pointRadius: 0 // Sem bolinhas na linha de referência
                         }
                     ]
                 },
