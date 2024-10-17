@@ -33,12 +33,12 @@
     </div>
 
     <script>
-        const numWaves = 20;
+        const numWaves = 50;
         let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25);
-        
-        // Inicializa as cristas com valores aleatórios entre 10 e 40
+
+        // Inicializa as cristas com valores aleatórios entre 10 e 40, arredondados para números inteiros
         for (let i = 1; i < waves.length; i += 2) {
-            waves[i] = Math.random() * 30 + 10; // Gera valores entre 10 e 40
+            waves[i] = Math.round(Math.random() * 30 + 10); // Gera valores entre 10 e 40 e arredonda
         }
 
         function generateWavePoints() {
@@ -70,16 +70,16 @@
                             backgroundColor: 'rgba(66, 165, 245, 0.2)',
                             borderColor: 'rgba(66, 165, 245, 1)',
                             borderWidth: 2,
-                            pointRadius: points.map(point => (point.x % 1 === 0.5 ? 5 : 0)), // Bolinhas apenas nas cristas
+                            pointRadius: points.map(point => (point.x % 1 === 0.5 ? 5 : 0)),
                             pointBackgroundColor: points.map(point => (point.x % 1 === 0.5 ? 'red' : 'rgba(66, 165, 245, 1)')),
-                            tension: 0.4, // Cria uma curva suave
+                            tension: 0.4,
                         },
                         {
                             label: 'Linha de Referência (25)',
                             data: new Array(points.length).fill(25),
                             borderColor: 'red',
                             borderWidth: 1,
-                            borderDash: [5, 5], // Linha tracejada
+                            borderDash: [5, 5],
                             fill: false,
                         }
                     ]
@@ -119,26 +119,11 @@
                                     size: 14
                                 }
                             }
-                        },
-                        tooltip: {
-                            enabled: false // Desativa tooltips padrão para melhor controle
                         }
                     },
-                    onClick: (event, elements) => {
-                        if (elements.length > 0) {
-                            const index = elements[0].index;
-                            const point = points[index];
-
-                            // Verifica se o ponto clicado é uma crista (x % 1 === 0.5)
-                            if (point.x % 1 === 0.5) {
-                                const newHeight = prompt("Insira a nova altura para a crista:", point.y);
-                                if (newHeight !== null && !isNaN(newHeight)) {
-                                    adjustCrista(Math.floor(point.x), parseFloat(newHeight));
-                                    waveChartInstance.destroy();
-                                    waveChartInstance = drawChart();
-                                }
-                            }
-                        }
+                    animation: {
+                        duration: 1000,
+                        easing: 'easeInOutCubic'
                     }
                 }
             });
@@ -148,17 +133,34 @@
 
         let waveChartInstance = drawChart();
 
+        document.getElementById('wavesCanvas').addEventListener('click', (event) => {
+            const points = waveChartInstance.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+            if (points.length) {
+                const pointIndex = points[0].index;
+                const selectedPoint = waveChartInstance.data.labels[pointIndex];
+                
+                if (selectedPoint % 1 === 0.5) {
+                    const newHeight = parseFloat(prompt('Digite a nova altura para a crista:'));
+                    if (!isNaN(newHeight) && newHeight >= 0 && newHeight <= 50) {
+                        adjustCrista(Math.floor(selectedPoint), newHeight);
+                        waveChartInstance.destroy();
+                        waveChartInstance = drawChart();
+                    } else {
+                        alert('Por favor, insira um valor entre 0 e 50.');
+                    }
+                }
+            }
+        });
+
         function adjustCrista(index, newHeight) {
             const peakIndex = index * 2 + 1;
             const amplitudeChange = newHeight - waves[peakIndex];
 
-            // Ajusta a altura da crista escolhida
             waves[peakIndex] = newHeight;
 
-            // Ajuste proporcional nas cristas vizinhas
-            const influenceRadius = 5; // Ajusta o alcance de influência
+            const influenceRadius = 5;
             for (let i = 1; i <= influenceRadius; i++) {
-                const factor = (1 - i / (influenceRadius + 1)); // Ajuste decrescente
+                const factor = (1 - i / (influenceRadius + 1));
 
                 if (peakIndex - i >= 0) {
                     waves[peakIndex - i] += amplitudeChange * factor;
@@ -168,12 +170,10 @@
                 }
             }
 
-            // Garante que os valores das pontas (início e fim) permaneçam fixos em 25
             for (let i = 0; i < waves.length; i += 2) {
                 waves[i] = 25;
             }
 
-            // Limita os valores das cristas entre 0 e 50
             waves = waves.map(val => Math.max(0, Math.min(50, val)));
         }
 
