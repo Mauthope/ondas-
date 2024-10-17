@@ -25,45 +25,11 @@
             margin-bottom: 20px;
             height: 400px;
         }
-
-        .controls {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-        }
-
-        .controls input, .controls button {
-            padding: 10px;
-            font-size: 16px;
-            border-radius: 5px;
-            border: 1px solid #ddd;
-            margin: 5px;
-        }
-
-        .controls button {
-            background-color: #42a5f5;
-            color: white;
-            border: none;
-            cursor: pointer;
-            transition: background-color 0.3s ease;
-        }
-
-        .controls button:hover {
-            background-color: #1e88e5;
-        }
     </style>
 </head>
 <body>
     <div id="waveChart">
         <canvas id="wavesCanvas"></canvas>
-    </div>
-    <div class="controls">
-        <label for="cristaNumber">Número da Crista (0.5 a 19.5):</label>
-        <input type="number" id="cristaNumber" min="0.5" max="19.5" step="0.5" value="5.5">
-        <label for="cristaHeight">Altura da Crista:</label>
-        <input type="number" id="cristaHeight" value="25" min="0" max="50">
-        <button onclick="updateCrista()">Atualizar Crista</button>
     </div>
 
     <script>
@@ -153,11 +119,26 @@
                                     size: 14
                                 }
                             }
+                        },
+                        tooltip: {
+                            enabled: false // Desativa tooltips padrão para melhor controle
                         }
                     },
-                    animation: {
-                        duration: 1000, // Duração da animação em milissegundos (1 segundo)
-                        easing: 'easeInOutCubic' // Efeito de suavização
+                    onClick: (event, elements) => {
+                        if (elements.length > 0) {
+                            const index = elements[0].index;
+                            const point = points[index];
+
+                            // Verifica se o ponto clicado é uma crista (x % 1 === 0.5)
+                            if (point.x % 1 === 0.5) {
+                                const newHeight = prompt("Insira a nova altura para a crista:", point.y);
+                                if (newHeight !== null && !isNaN(newHeight)) {
+                                    adjustCrista(Math.floor(point.x), parseFloat(newHeight));
+                                    waveChartInstance.destroy();
+                                    waveChartInstance = drawChart();
+                                }
+                            }
+                        }
                     }
                 }
             });
@@ -166,16 +147,6 @@
         }
 
         let waveChartInstance = drawChart();
-
-        function updateCrista() {
-            const cristaNumber = parseFloat(document.getElementById('cristaNumber').value);
-            const newHeight = parseFloat(document.getElementById('cristaHeight').value);
-            const index = Math.floor(cristaNumber);
-
-            adjustCrista(index, newHeight);
-            waveChartInstance.destroy(); // Remove o gráfico antigo
-            waveChartInstance = drawChart(); // Desenha o novo gráfico atualizado
-        }
 
         function adjustCrista(index, newHeight) {
             const peakIndex = index * 2 + 1;
