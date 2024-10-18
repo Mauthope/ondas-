@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modelo de Barras com Ajuste por Altura</title>
+    <title>Modelo de Ondas com Ajuste por Crista</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -33,51 +33,48 @@
     </div>
 
     <script>
-        const numWaves = 60; // Total de barras (60)
+        const numWaves = 60; // Total de cristas (60)
         let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25); // Inicialmente todas as alturas são 25
 
-        // Ajusta 15 barras aleatórias para valores entre 20 e 30
+        // Ajusta 15 cristas aleatórias para valores entre 20 e 30
         for (let i = 0; i < 15; i++) {
             const randomIndex = Math.floor(Math.random() * numWaves) * 2 + 1; // Seleciona um índice de crista aleatório
             waves[randomIndex] = Math.round(Math.random() * 10 + 20); // Gera valores entre 20 e 30 arredondados
         }
 
-        function generateBarPoints() {
+        function generateWavePoints() {
             const points = [];
             for (let i = 0; i < numWaves; i++) {
                 const base = i;
-                const peak = waves[i * 2 + 1]; // Altura da barra
+                const peak = base + 0.5;
+                const end = base + 1;
 
-                points.push({ x: base, y: peak });
+                points.push({ x: base, y: waves[i * 2] });
+                points.push({ x: peak, y: waves[i * 2 + 1] });
+                points.push({ x: end, y: waves[(i + 1) * 2] });
             }
             return points;
         }
 
         function drawChart() {
-            const points = generateBarPoints();
+            const points = generateWavePoints();
             const ctx = document.getElementById('wavesCanvas').getContext('2d');
 
             const waveChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: points.map(point => `Barra ${point.x + 1}`),
+                    labels: points.map(point => point.x.toFixed(2)),
                     datasets: [
                         {
-                            label: 'Altura das Barras',
-                            data: points.map(point => point.y),
-                            backgroundColor: 'rgba(66, 165, 245, 0.6)',
-                            borderColor: 'rgba(66, 165, 245, 1)',
-                            borderWidth: 2
-                        },
-                        {
-                            label: 'Linha de Referência (25)',
-                            data: new Array(points.length).fill(25),
-                            borderColor: 'red',
-                            borderWidth: 1,
-                            borderDash: [5, 5],
-                            type: 'line',
-                            fill: false,
-                            pointRadius: 0
+                            label: 'Altura das Ondas',
+                            data: points.map(point => point.y - 25),
+                            backgroundColor: points.map(point =>
+                                point.y > 25 ? 'rgba(66, 165, 245, 0.7)' : 'rgba(255, 99, 132, 0.7)'
+                            ),
+                            borderColor: points.map(point =>
+                                point.y > 25 ? 'rgba(66, 165, 245, 1)' : 'rgba(255, 99, 132, 1)'
+                            ),
+                            borderWidth: 1
                         }
                     ]
                 },
@@ -86,25 +83,27 @@
                         x: {
                             title: {
                                 display: true,
-                                text: 'Número da Barra',
-                                font: {
-                                    size: 16
-                                }
-                            },
-                            ticks: {
-                                autoSkip: false
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Altura',
+                                text: 'Número da Onda',
                                 font: {
                                     size: 16
                                 }
                             },
                             min: 0,
-                            max: 75
+                            max: numWaves,
+                            ticks: {
+                                stepSize: 1
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Altura Relativa (±)',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            min: -25,
+                            max: 50
                         }
                     },
                     responsive: true,
@@ -119,7 +118,7 @@
                             }
                         }
                     },
-                    animation: false
+                    animation: false // Desativa animações para evitar movimento ao atualizar o gráfico
                 }
             });
 
@@ -133,19 +132,21 @@
             if (points.length) {
                 const pointIndex = points[0].index;
                 const selectedPoint = waveChartInstance.data.labels[pointIndex];
-
-                const newHeight = parseFloat(prompt('Digite a nova altura para a barra (20-30):'));
-                if (!isNaN(newHeight) && newHeight >= 20 && newHeight <= 30) {
-                    adjustBar(pointIndex, newHeight);
-                    waveChartInstance.destroy();
-                    waveChartInstance = drawChart();
-                } else {
-                    alert('Por favor, insira um valor entre 20 e 30.');
+                
+                if (selectedPoint % 1 === 0.5) {
+                    const newHeight = parseFloat(prompt('Digite a nova altura para a crista (20-30):'));
+                    if (!isNaN(newHeight) && newHeight >= 20 && newHeight <= 30) {
+                        adjustCrista(Math.floor(selectedPoint), newHeight);
+                        waveChartInstance.destroy();
+                        waveChartInstance = drawChart();
+                    } else {
+                        alert('Por favor, insira um valor entre 20 e 30.');
+                    }
                 }
             }
         });
 
-        function adjustBar(index, newHeight) {
+        function adjustCrista(index, newHeight) {
             const peakIndex = index * 2 + 1;
             const amplitudeChange = newHeight - waves[peakIndex];
 
