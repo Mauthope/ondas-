@@ -54,9 +54,9 @@
                         backgroundColor: amplitudes.map(value => {
                             if (value < 0) {
                                 return 'rgba(255, 82, 82, 0.6)'; // Vermelho para valores negativos
-                            } else if (value < 15) {
+                            } else if (value < 20) {
                                 return 'rgba(255, 255, 0, 0.6)'; // Amarelo para valores menores que 15
-                            } else if (value > 40) {
+                            } else if (value > 30) {
                                 return 'rgba(255, 82, 82, 0.6)'; // Vermelho para valores maiores que 40
                             }
                             return 'rgba(76, 175, 80, 0.6)'; // Verde para outros valores
