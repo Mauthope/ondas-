@@ -6,25 +6,32 @@
     <title>Gráfico de Amplitude</title>
     <style>
         /* CSS para estilização */
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
         #chart-container {
             display: flex;
-            justify-content: space-around;
+            justify-content: center;
             align-items: flex-end;
             height: 400px;
             width: 100%;
-            background-color: #f0f0f0;
             margin-top: 20px;
             border: 1px solid #ddd;
+            position: relative;
         }
         .bar {
             width: 30px;
             background-color: #3498db;
-            margin: 0 2px;
+            margin: 0 5px;
             cursor: pointer;
-            transition: height 0.2s;
+            transition: height 0.2s, margin-bottom 0.2s;
+            position: relative;
         }
         .bar.negative {
             background-color: #e74c3c;
+            bottom: 0; /* Posiciona a barra negativa a partir do fundo */
         }
     </style>
 </head>
@@ -35,8 +42,8 @@
         const chartContainer = document.getElementById('chart-container');
         const numBars = 10;
         const bars = [];
-        let minAmplitude = -50;
-        let maxAmplitude = 50;
+        const minAmplitude = -50;
+        const maxAmplitude = 50;
 
         // Função para gerar valores aleatórios com suavidade
         function generateRandomValues() {
@@ -59,6 +66,12 @@
                 bar.classList.toggle('negative', value < 0);
                 bar.dataset.value = value;
                 bar.dataset.index = index;
+
+                // Define a posição da barra negativa
+                if (value < 0) {
+                    bar.style.marginBottom = `${Math.abs(value)}%`;
+                }
+
                 bar.addEventListener('click', () => editBar(index));
                 chartContainer.appendChild(bar);
                 bars.push(bar);
@@ -110,7 +123,14 @@
             bars.forEach(bar => {
                 const value = parseInt(bar.dataset.value, 10);
                 bar.style.height = `${Math.abs(value)}%`;
-                bar.classList.toggle('negative', value < 0);
+
+                if (value < 0) {
+                    bar.style.marginBottom = `${Math.abs(value)}%`;
+                    bar.classList.add('negative');
+                } else {
+                    bar.style.marginBottom = '0'; // Remove margem para barras positivas
+                    bar.classList.remove('negative');
+                }
             });
         }
 
