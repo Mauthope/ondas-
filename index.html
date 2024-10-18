@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modelo de Ondas com Ajuste por Crista</title>
+    <title>Modelo de Ondas com Ajuste Proporcional</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -34,11 +34,10 @@
 
     <script>
         const numWaves = 60; // Total de barras
-        // Gera valores aleatórios entre 20 e 30, excluindo 25
         let waves = Array.from({ length: numWaves }, () => {
             let value;
             do {
-                value = Math.round(Math.random() * 10 + 20);
+                value = Math.round(Math.random() * 20 - 10 + 25); // Gera valores aleatórios entre 15 e 35, mas exclui 25 inicialmente
             } while (value === 25);
             return value;
         });
@@ -53,7 +52,7 @@
                     datasets: [
                         {
                             label: 'Altura das Ondas',
-                            data: waves.map(val => val - 25), // Subtrai 25 para que 0 represente o ponto inicial
+                            data: waves.map(val => val - 25),
                             backgroundColor: waves.map(val =>
                                 val > 25 ? 'rgba(66, 165, 245, 0.7)' : 'rgba(255, 99, 132, 0.7)'
                             ),
@@ -84,8 +83,8 @@
                                     size: 16
                                 }
                             },
-                            min: -10,
-                            max: 10,
+                            min: -20,
+                            max: 20,
                             grid: {
                                 drawBorder: false,
                                 color: (context) => context.tick.value === 0 ? '#000' : '#ddd'
@@ -104,7 +103,7 @@
                             }
                         }
                     },
-                    animation: false // Desativa animações para evitar movimento ao atualizar o gráfico
+                    animation: false
                 }
             });
 
@@ -118,19 +117,44 @@
             if (points.length) {
                 const pointIndex = points[0].index;
                 
-                const newHeight = parseFloat(prompt('Digite a nova altura para a crista (20-30, exceto 25):'));
-                if (!isNaN(newHeight) && newHeight >= 20 && newHeight <= 30 && newHeight !== 25) {
-                    adjustCrista(pointIndex, newHeight);
+                const newHeight = parseFloat(prompt('Digite a nova altura para a crista (exceto 25):'));
+                if (!isNaN(newHeight) && newHeight !== 25) {
+                    adjustCrista(pointIndex, newHeight, true);
                     waveChartInstance.destroy();
                     waveChartInstance = drawChart();
                 } else {
-                    alert('Por favor, insira um valor entre 20 e 30, exceto 25.');
+                    alert('Por favor, insira um valor diferente de 25.');
                 }
             }
         });
 
-        function adjustCrista(index, newHeight) {
+        function adjustCrista(index, newHeight, manualAdjustment = false) {
+            const originalHeight = waves[index];
             waves[index] = newHeight;
+
+            // Ajuste proporcional das vizinhas
+            if (!manualAdjustment) {
+                if (index > 0) {
+                    const leftNeighbor = waves[index - 1];
+                    const diff = originalHeight - newHeight;
+                    waves[index - 1] = adjustNeighbor(leftNeighbor, diff);
+                }
+
+                if (index < numWaves - 1) {
+                    const rightNeighbor = waves[index + 1];
+                    const diff = originalHeight - newHeight;
+                    waves[index + 1] = adjustNeighbor(rightNeighbor, diff);
+                }
+            }
+        }
+
+        function adjustNeighbor(neighborValue, diff) {
+            // Ajusta a vizinha proporcional ao movimento da barra atual
+            if (neighborValue > 25) {
+                return neighborValue + diff * 0.5;
+            } else {
+                return neighborValue - diff * 0.5;
+            }
         }
 
         waveChartInstance.update();
