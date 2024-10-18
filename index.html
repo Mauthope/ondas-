@@ -33,7 +33,7 @@
     </div>
 
     <script>
-        const numWaves = 30; // Total de cristas (30)
+        const numWaves = 60; // Total de barras
         let waves = Array.from({ length: numWaves }, () => 25);
 
         // Ajusta 15 cristas aleatórias para valores entre 20 e 30
@@ -72,7 +72,8 @@
                                 font: {
                                     size: 16
                                 }
-                            }
+                            },
+                            stacked: true
                         },
                         y: {
                             title: {
@@ -83,7 +84,11 @@
                                 }
                             },
                             min: -10,
-                            max: 10
+                            max: 10,
+                            grid: {
+                                drawBorder: false,
+                                color: (context) => context.tick.value === 0 ? '#000' : '#ddd'
+                            }
                         }
                     },
                     responsive: true,
@@ -111,7 +116,6 @@
             const points = waveChartInstance.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
             if (points.length) {
                 const pointIndex = points[0].index;
-                const selectedPoint = waveChartInstance.data.labels[pointIndex];
                 
                 const newHeight = parseFloat(prompt('Digite a nova altura para a crista (20-30):'));
                 if (!isNaN(newHeight) && newHeight >= 20 && newHeight <= 30) {
