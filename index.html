@@ -15,7 +15,7 @@
             padding: 20px;
         }
 
-        #amplitudeChart {
+        #waveChart {
             width: 95%;
             max-width: 1200px;
             background: white;
@@ -28,108 +28,170 @@
     </style>
 </head>
 <body>
-    <div id="amplitudeChart">
-        <canvas id="amplitudeCanvas"></canvas>
+    <div id="waveChart">
+        <canvas id="wavesCanvas"></canvas>
     </div>
 
     <script>
-        const numBars = 20; // Número total de barras
-        let amplitudes = Array.from({ length: numBars }, () => Math.floor(Math.random() * 10) + 20); // Valores iniciais aleatórios entre 20 e 30
+        const numWaves = 60; // Total de cristas (60)
+        let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25); // Inicialmente todas as alturas são 25
+
+        // Ajusta 15 cristas aleatórias para valores entre 20 e 30
+        for (let i = 0; i < 15; i++) {
+            const randomIndex = Math.floor(Math.random() * numWaves) * 2 + 1; // Seleciona um índice de crista aleatório
+            waves[randomIndex] = Math.round(Math.random() * 10 + 20); // Gera valores entre 20 e 30 arredondados
+        }
+
+        // Adiciona algumas barras negativas para criar um desafio
+        for (let i = 0; i < 5; i++) {
+            const randomNegativeIndex = Math.floor(Math.random() * numWaves) * 2 + 1; // Seleciona um índice de crista aleatório
+            waves[randomNegativeIndex] = Math.round(Math.random() * 10 - 25); // Gera valores entre -25 e -15 arredondados
+        }
+
+        function generateWavePoints() {
+            const points = [];
+            for (let i = 0; i < numWaves; i++) {
+                const base = i;
+                const peak = base + 0.5;
+                const end = base + 1;
+
+                points.push({ x: base, y: waves[i * 2] });
+                points.push({ x: peak, y: waves[i * 2 + 1] });
+                points.push({ x: end, y: waves[(i + 1) * 2] });
+            }
+            return points;
+        }
+
+        function getBarColor(value) {
+            if (value < 0) return 'red'; // Vermelho para barras negativas
+            if (value > 30 || value < 20) return 'yellow'; // Amarelo para barras fora da média
+            return 'rgba(66, 165, 245, 1)'; // Azul padrão
+        }
 
         function drawChart() {
-            const ctx = document.getElementById('amplitudeCanvas').getContext('2d');
+            const points = generateWavePoints();
+            const ctx = document.getElementById('wavesCanvas').getContext('2d');
 
-            const amplitudeChart = new Chart(ctx, {
-                type: 'bar',
+            const waveChart = new Chart(ctx, {
+                type: 'line',
                 data: {
-                    labels: amplitudes.map((_, index) => index + 1),
-                    datasets: [{
-                        label: 'Amplitude',
-                        data: amplitudes,
-                        backgroundColor: amplitudes.map(value => value >= 0 ? 'rgba(66, 165, 245, 0.6)' : 'rgba(255, 82, 82, 0.6)'),
-                    }]
+                    labels: points.map(point => point.x.toFixed(2)),
+                    datasets: [
+                        {
+                            label: 'Altura das Ondas',
+                            data: points.map(point => point.y),
+                            backgroundColor: points.map(point => getBarColor(point.y)), // Cor baseada no valor
+                            borderColor: points.map(point => getBarColor(point.y)), // Cor da borda baseada no valor
+                            borderWidth: 2,
+                            pointRadius: points.map(point => (point.x % 1 === 0.5 ? 3 : 0)), // Bolinhas menores e apenas nas cristas
+                            pointBackgroundColor: points.map(point => (point.x % 1 === 0.5 ? 'red' : 'rgba(66, 165, 245, 1)')),
+                            tension: 0.4,
+                        },
+                        {
+                            label: 'Linha de Referência (25)',
+                            data: new Array(points.length).fill(25),
+                            borderColor: 'red',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            fill: false,
+                            pointRadius: 0 // Sem bolinhas na linha de referência
+                        }
+                    ]
                 },
                 options: {
                     scales: {
                         x: {
                             title: {
                                 display: true,
-                                text: 'Barras',
+                                text: 'Número da Onda',
                                 font: {
                                     size: 16
                                 }
                             },
                             min: 0,
-                            max: numBars + 1
+                            max: numWaves,
+                            ticks: {
+                                stepSize: 1
+                            }
                         },
                         y: {
                             title: {
                                 display: true,
-                                text: 'Amplitude',
+                                text: 'Altura',
                                 font: {
                                     size: 16
                                 }
                             },
-                            min: -10,
-                            max: 50
+                            min: -30, // Ajuste do mínimo para incluir valores negativos
+                            max: 75
                         }
                     },
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: true
+                            display: true,
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
+                            }
                         }
-                    }
+                    },
+                    animation: false // Desativa animações para evitar movimento ao atualizar o gráfico
                 }
             });
 
-            return amplitudeChart;
+            return waveChart;
         }
 
-        let amplitudeChartInstance = drawChart();
+        let waveChartInstance = drawChart();
 
-        document.getElementById('amplitudeCanvas').addEventListener('click', (event) => {
-            const points = amplitudeChartInstance.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+        document.getElementById('wavesCanvas').addEventListener('click', (event) => {
+            const points = waveChartInstance.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
             if (points.length) {
                 const pointIndex = points[0].index;
-                const newHeight = parseInt(prompt('Digite a nova amplitude para a barra (0-50):'), 10);
+                const selectedPoint = waveChartInstance.data.labels[pointIndex];
                 
-                if (!isNaN(newHeight) && newHeight >= 0 && newHeight <= 50) {
-                    adjustAmplitude(pointIndex, newHeight);
-                    amplitudeChartInstance.destroy();
-                    amplitudeChartInstance = drawChart();
-                } else {
-                    alert('Por favor, insira um valor entre 0 e 50.');
+                if (selectedPoint % 1 === 0.5) {
+                    const newHeight = parseFloat(prompt('Digite a nova altura para a crista (20-30):'));
+                    if (!isNaN(newHeight) && newHeight >= -30 && newHeight <= 30) {
+                        adjustCrista(Math.floor(selectedPoint), newHeight);
+                        waveChartInstance.destroy();
+                        waveChartInstance = drawChart();
+                    } else {
+                        alert('Por favor, insira um valor entre -30 e 30.');
+                    }
                 }
             }
         });
 
-        function adjustAmplitude(index, newHeight) {
-            const amplitudeChange = newHeight - amplitudes[index];
-            amplitudes[index] = newHeight;
+        function adjustCrista(index, newHeight) {
+            const peakIndex = index * 2 + 1;
+            const amplitudeChange = newHeight - waves[peakIndex];
 
-            // Ajusta as barras vizinhas
-            const adjustNeighbors = (index, change) => {
-                if (index > 0) {
-                    const neighborChange = change * 0.5; // Ajusta proporcionalmente
-                    amplitudes[index - 1] += neighborChange;
+            waves[peakIndex] = newHeight;
+
+            const influenceRadius = 5;
+            for (let i = 1; i <= influenceRadius; i++) {
+                const factor = (1 - i / (influenceRadius + 1));
+
+                if (peakIndex - i >= 0) {
+                    waves[peakIndex - i] += amplitudeChange * factor;
                 }
-                if (index < amplitudes.length - 1) {
-                    const neighborChange = change * 0.5; // Ajusta proporcionalmente
-                    amplitudes[index + 1] += neighborChange;
+                if (peakIndex + i < waves.length) {
+                    waves[peakIndex + i] += amplitudeChange * factor;
                 }
             }
 
-            adjustNeighbors(index, amplitudeChange);
-            
-            // Garante que as amplitudes não fiquem fora do limite
-            for (let i = 0; i < amplitudes.length; i++) {
-                amplitudes[i] = Math.max(-10, Math.min(50, amplitudes[i]));
+            for (let i = 0; i < waves.length; i += 2) {
+                waves[i] = 25;
             }
+
+            waves = waves.map(val => Math.max(-30, Math.min(50, val))); // Ajusta os limites
         }
 
-        amplitudeChartInstance.update();
+        waveChartInstance.update();
     </script>
 </body>
 </html>
