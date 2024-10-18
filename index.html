@@ -3,161 +3,120 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modelo de Ondas com Ajuste Proporcional</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Gráfico de Amplitude</title>
     <style>
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #e3f2fd;
+        /* CSS para estilização */
+        #chart-container {
             display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
-        }
-
-        #waveChart {
-            width: 95%;
-            max-width: 1200px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
-            padding: 20px;
-            margin-bottom: 20px;
+            justify-content: space-around;
+            align-items: flex-end;
             height: 400px;
+            width: 100%;
+            background-color: #f0f0f0;
+            margin-top: 20px;
+            border: 1px solid #ddd;
+        }
+        .bar {
+            width: 30px;
+            background-color: #3498db;
+            margin: 0 2px;
+            cursor: pointer;
+            transition: height 0.2s;
+        }
+        .bar.negative {
+            background-color: #e74c3c;
         }
     </style>
 </head>
 <body>
-    <div id="waveChart">
-        <canvas id="wavesCanvas"></canvas>
-    </div>
-
+    <div id="chart-container"></div>
     <script>
-        const numWaves = 60; // Total de barras
-        let waves = Array.from({ length: numWaves }, () => {
-            let value;
-            do {
-                value = Math.round(Math.random() * 20 - 10 + 25); // Gera valores aleatórios entre 15 e 35, mas exclui 25 inicialmente
-            } while (value === 25);
-            return value;
-        });
+        // JavaScript para gerar e controlar o gráfico
+        const chartContainer = document.getElementById('chart-container');
+        const numBars = 10;
+        const bars = [];
+        let minAmplitude = -50;
+        let maxAmplitude = 50;
 
-        function drawChart() {
-            const ctx = document.getElementById('wavesCanvas').getContext('2d');
+        // Função para gerar valores aleatórios com suavidade
+        function generateRandomValues() {
+            let values = [];
+            for (let i = 0; i < numBars; i++) {
+                let randomValue = Math.floor(Math.random() * 10) + 20; // Valores entre 20 e 30
+                randomValue *= Math.random() > 0.5 ? 1 : -1; // Aleatoriamente positivo ou negativo
+                values.push(randomValue);
+            }
+            return values;
+        }
 
-            const waveChart = new Chart(ctx, {
-                type: 'bar',
-                data: {
-                    labels: waves.map((_, index) => `Onda ${index + 1}`),
-                    datasets: [
-                        {
-                            label: 'Altura das Ondas',
-                            data: waves.map(val => val - 25),
-                            backgroundColor: waves.map(val =>
-                                val > 25 ? 'rgba(66, 165, 245, 0.7)' : 'rgba(255, 99, 132, 0.7)'
-                            ),
-                            borderColor: waves.map(val =>
-                                val > 25 ? 'rgba(66, 165, 245, 1)' : 'rgba(255, 99, 132, 1)'
-                            ),
-                            borderWidth: 1
-                        }
-                    ]
-                },
-                options: {
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Número da Onda',
-                                font: {
-                                    size: 16
-                                }
-                            },
-                            stacked: true
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Altura Relativa (±)',
-                                font: {
-                                    size: 16
-                                }
-                            },
-                            min: -20,
-                            max: 20,
-                            grid: {
-                                drawBorder: false,
-                                color: (context) => context.tick.value === 0 ? '#000' : '#ddd'
-                            }
-                        }
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                font: {
-                                    size: 14
-                                }
-                            }
-                        }
-                    },
-                    animation: false
-                }
+        // Função para criar o gráfico
+        function createChart(values) {
+            chartContainer.innerHTML = ''; // Limpa o container
+            values.forEach((value, index) => {
+                const bar = document.createElement('div');
+                bar.classList.add('bar');
+                bar.style.height = `${Math.abs(value)}%`;
+                bar.classList.toggle('negative', value < 0);
+                bar.dataset.value = value;
+                bar.dataset.index = index;
+                bar.addEventListener('click', () => editBar(index));
+                chartContainer.appendChild(bar);
+                bars.push(bar);
             });
-
-            return waveChart;
         }
 
-        let waveChartInstance = drawChart();
+        // Função para editar a barra selecionada
+        function editBar(index) {
+            const currentBar = bars[index];
+            const currentValue = parseInt(currentBar.dataset.value, 10);
+            const newValue = parseInt(prompt('Digite o novo valor da barra:', currentValue), 10);
+            if (isNaN(newValue)) return;
 
-        document.getElementById('wavesCanvas').addEventListener('click', (event) => {
-            const points = waveChartInstance.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
-            if (points.length) {
-                const pointIndex = points[0].index;
-                
-                const newHeight = parseFloat(prompt('Digite a nova altura para a crista (exceto 25):'));
-                if (!isNaN(newHeight) && newHeight !== 25) {
-                    adjustCrista(pointIndex, newHeight, true);
-                    waveChartInstance.destroy();
-                    waveChartInstance = drawChart();
-                } else {
-                    alert('Por favor, insira um valor diferente de 25.');
-                }
-            }
-        });
+            // Calcula a diferença e distribui para as vizinhas
+            const difference = currentValue - newValue;
+            distributeDifference(index, difference);
 
-        function adjustCrista(index, newHeight, manualAdjustment = false) {
-            const originalHeight = waves[index];
-            waves[index] = newHeight;
+            // Atualiza os valores e o gráfico
+            updateChart();
+        }
 
-            // Ajuste proporcional das vizinhas
-            if (!manualAdjustment) {
-                if (index > 0) {
-                    const leftNeighbor = waves[index - 1];
-                    const diff = originalHeight - newHeight;
-                    waves[index - 1] = adjustNeighbor(leftNeighbor, diff);
-                }
+        // Função para distribuir a diferença entre as barras vizinhas
+        function distributeDifference(index, difference) {
+            const leftIndex = index > 0 ? index - 1 : null;
+            const rightIndex = index < bars.length - 1 ? index + 1 : null;
 
-                if (index < numWaves - 1) {
-                    const rightNeighbor = waves[index + 1];
-                    const diff = originalHeight - newHeight;
-                    waves[index + 1] = adjustNeighbor(rightNeighbor, diff);
-                }
+            if (leftIndex !== null && rightIndex !== null) {
+                adjustBarValue(leftIndex, difference / 2);
+                adjustBarValue(rightIndex, difference / 2);
+            } else if (leftIndex !== null) {
+                adjustBarValue(leftIndex, difference);
+            } else if (rightIndex !== null) {
+                adjustBarValue(rightIndex, difference);
             }
         }
 
-        function adjustNeighbor(neighborValue, diff) {
-            // Ajusta a vizinha proporcional ao movimento da barra atual
-            if (neighborValue > 25) {
-                return neighborValue + diff * 0.5;
-            } else {
-                return neighborValue - diff * 0.5;
-            }
+        // Função para ajustar o valor da barra e garantir que o valor esteja dentro dos limites
+        function adjustBarValue(index, adjustment) {
+            const bar = bars[index];
+            let newValue = parseInt(bar.dataset.value, 10) + adjustment;
+
+            // Ajusta a amplitude conforme o valor positivo ou negativo
+            newValue = newValue > maxAmplitude ? maxAmplitude : newValue < minAmplitude ? minAmplitude : newValue;
+            bar.dataset.value = newValue;
         }
 
-        waveChartInstance.update();
+        // Função para atualizar o gráfico após edições
+        function updateChart() {
+            bars.forEach(bar => {
+                const value = parseInt(bar.dataset.value, 10);
+                bar.style.height = `${Math.abs(value)}%`;
+                bar.classList.toggle('negative', value < 0);
+            });
+        }
+
+        // Gera os valores iniciais e cria o gráfico
+        const initialValues = generateRandomValues();
+        createChart(initialValues);
     </script>
 </body>
 </html>
