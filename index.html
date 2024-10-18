@@ -34,13 +34,14 @@
 
     <script>
         const numWaves = 60; // Total de barras
-        let waves = Array.from({ length: numWaves }, () => 25);
-
-        // Ajusta 15 cristas aleatórias para valores entre 20 e 30
-        for (let i = 0; i < 15; i++) {
-            const randomIndex = Math.floor(Math.random() * numWaves);
-            waves[randomIndex] = Math.round(Math.random() * 10 + 20);
-        }
+        // Gera valores aleatórios entre 20 e 30, excluindo 25
+        let waves = Array.from({ length: numWaves }, () => {
+            let value;
+            do {
+                value = Math.round(Math.random() * 10 + 20);
+            } while (value === 25);
+            return value;
+        });
 
         function drawChart() {
             const ctx = document.getElementById('wavesCanvas').getContext('2d');
@@ -117,13 +118,13 @@
             if (points.length) {
                 const pointIndex = points[0].index;
                 
-                const newHeight = parseFloat(prompt('Digite a nova altura para a crista (20-30):'));
-                if (!isNaN(newHeight) && newHeight >= 20 && newHeight <= 30) {
+                const newHeight = parseFloat(prompt('Digite a nova altura para a crista (20-30, exceto 25):'));
+                if (!isNaN(newHeight) && newHeight >= 20 && newHeight <= 30 && newHeight !== 25) {
                     adjustCrista(pointIndex, newHeight);
                     waveChartInstance.destroy();
                     waveChartInstance = drawChart();
                 } else {
-                    alert('Por favor, insira um valor entre 20 e 30.');
+                    alert('Por favor, insira um valor entre 20 e 30, exceto 25.');
                 }
             }
         });
