@@ -1,185 +1,68 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Modelo de Ondas com Ajuste por Crista</title>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <title>Controle de Produção de OP</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif;
-            background-color: #e3f2fd;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 20px;
+            font-family: 'Roboto', sans-serif;
+            margin: 20px;
+            background-color: #f4f6f9;
+            color: #333;
         }
 
-        #waveChart {
-            width: 95%;
-            max-width: 1200px;
-            background: white;
-            border-radius: 10px;
-            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
-            padding: 20px;
+        h1 {
+            color: #3f51b5;
+            text-align: center;
+            font-size: 2.5em;
+            font-weight: bold;
             margin-bottom: 20px;
-            height: 400px;
+        }
+
+        .chart-container {
+            width: 80%;
+            margin: 0 auto;
+            margin-top: 20px;
         }
     </style>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <div id="waveChart">
-        <canvas id="wavesCanvas"></canvas>
+    <h1>Controle de Produção</h1>
+
+    <div class="chart-container">
+        <canvas id="myChart"></canvas>
     </div>
 
     <script>
-        const numWaves = 60; // Total de cristas (60)
-        let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25); // Inicialmente todas as alturas são 25
+        const ctx = document.getElementById('myChart').getContext('2d');
+        const data = [15, 30, 20, 35, 10, 50, 25]; // Exemplo de dados para o gráfico
 
-        // Ajusta 15 cristas aleatórias para valores entre 20 e 30
-        for (let i = 0; i < 15; i++) {
-            const randomIndex = Math.floor(Math.random() * numWaves) * 2 + 1; // Seleciona um índice de crista aleatório
-            waves[randomIndex] = Math.round(Math.random() * 10 + 20); // Gera valores entre 20 e 30 arredondados
-        }
-
-        function generateWavePoints() {
-            const points = [];
-            for (let i = 0; i < numWaves; i++) {
-                const base = i;
-                const peak = base + 0.5;
-                const end = base + 1;
-
-                points.push({ x: base, y: waves[i * 2] });
-                points.push({ x: peak, y: waves[i * 2 + 1] });
-                points.push({ x: end, y: waves[(i + 1) * 2] });
-            }
-            return points;
-        }
-
-        function drawChart() {
-            const points = generateWavePoints();
-            const ctx = document.getElementById('wavesCanvas').getContext('2d');
-
-            const waveChart = new Chart(ctx, {
-                type: 'line',
-                data: {
-                    labels: points.map(point => point.x.toFixed(2)),
-                    datasets: [
-                        {
-                            label: 'Altura das Ondas',
-                            data: points.map(point => point.y),
-                            backgroundColor: 'rgba(66, 165, 245, 0.2)',
-                            borderColor: 'rgba(66, 165, 245, 1)',
-                            borderWidth: 2,
-                            pointRadius: points.map(point => (point.x % 1 === 0.5 ? 3 : 0)), // Bolinhas menores e apenas nas cristas
-                            pointBackgroundColor: points.map(point => (point.x % 1 === 0.5 ? 'red' : 'rgba(66, 165, 245, 1)')),
-                            tension: 0.4,
-                        },
-                        {
-                            label: 'Linha de Referência (25)',
-                            data: new Array(points.length).fill(25),
-                            borderColor: 'red',
-                            borderWidth: 1,
-                            borderDash: [5, 5],
-                            fill: false,
-                            pointRadius: 0 // Sem bolinhas na linha de referência
-                        }
-                    ]
-                },
-                options: {
-                    scales: {
-                        x: {
-                            title: {
-                                display: true,
-                                text: 'Número da Onda',
-                                font: {
-                                    size: 16
-                                }
-                            },
-                            min: 0,
-                            max: numWaves,
-                            ticks: {
-                                stepSize: 1
-                            }
-                        },
-                        y: {
-                            title: {
-                                display: true,
-                                text: 'Altura',
-                                font: {
-                                    size: 16
-                                }
-                            },
-                            min: 0,
-                            max: 75
-                        }
-                    },
-                    responsive: true,
-                    maintainAspectRatio: false,
-                    plugins: {
-                        legend: {
-                            display: true,
-                            labels: {
-                                font: {
-                                    size: 14
-                                }
-                            }
-                        }
-                    },
-                    animation: false // Desativa animações para evitar movimento ao atualizar o gráfico
-                }
-            });
-
-            return waveChart;
-        }
-
-        let waveChartInstance = drawChart();
-
-        document.getElementById('wavesCanvas').addEventListener('click', (event) => {
-            const points = waveChartInstance.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
-            if (points.length) {
-                const pointIndex = points[0].index;
-                const selectedPoint = waveChartInstance.data.labels[pointIndex];
-                
-                if (selectedPoint % 1 === 0.5) {
-                    const newHeight = parseFloat(prompt('Digite a nova altura para a crista (20-30):'));
-                    if (!isNaN(newHeight) && newHeight >= 20 && newHeight <= 30) {
-                        adjustCrista(Math.floor(selectedPoint), newHeight);
-                        waveChartInstance.destroy();
-                        waveChartInstance = drawChart();
-                    } else {
-                        alert('Por favor, insira um valor entre 20 e 30.');
+        const myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
+                datasets: [{
+                    data: data,
+                    backgroundColor: data.map(value => value < 25 ? 'red' : 'green'),
+                }]
+            },
+            options: {
+                scales: {
+                    y: {
+                        display: false // Remove os números do eixo Y
                     }
-                }
+                },
+                plugins: {
+                    legend: {
+                        display: false // Remove a legenda
+                    }
+                },
+                responsive: true,
+                maintainAspectRatio: false
             }
         });
-
-        function adjustCrista(index, newHeight) {
-            const peakIndex = index * 2 + 1;
-            const amplitudeChange = newHeight - waves[peakIndex];
-
-            waves[peakIndex] = newHeight;
-
-            const influenceRadius = 5;
-            for (let i = 1; i <= influenceRadius; i++) {
-                const factor = (1 - i / (influenceRadius + 1));
-
-                if (peakIndex - i >= 0) {
-                    waves[peakIndex - i] += amplitudeChange * factor;
-                }
-                if (peakIndex + i < waves.length) {
-                    waves[peakIndex + i] += amplitudeChange * factor;
-                }
-            }
-
-            for (let i = 0; i < waves.length; i += 2) {
-                waves[i] = 25;
-            }
-
-            waves = waves.map(val => Math.max(0, Math.min(50, val)));
-        }
-
-        waveChartInstance.update();
     </script>
 </body>
 </html>
