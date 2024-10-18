@@ -41,6 +41,15 @@
         const numBars = 60; // Número total de barras
         let amplitudes = Array.from({ length: numBars }, () => Math.floor(Math.random() * 10) + 20); // Valores iniciais aleatórios entre 20 e 30
 
+        // Garantir pelo menos uma barra abaixo de 20 e uma acima de 30
+        amplitudes[0] = Math.floor(Math.random() * 20); // Valor abaixo de 20
+        amplitudes[1] = Math.floor(Math.random() * 20) + 31; // Valor acima de 30
+
+        // Preencher o restante das barras com valores aleatórios
+        for (let i = 2; i < numBars; i++) {
+            amplitudes[i] = Math.floor(Math.random() * 10) + 20; // Valores entre 20 e 30
+        }
+
         function drawChart() {
             const ctx = document.getElementById('amplitudeCanvas').getContext('2d');
 
@@ -54,9 +63,9 @@
                         backgroundColor: amplitudes.map(value => {
                             if (value < 0) {
                                 return 'rgba(255, 82, 82, 0.6)'; // Vermelho para valores negativos
-                            } else if (value < 20) {
+                            } else if (value < 15) {
                                 return 'rgba(255, 255, 0, 0.6)'; // Amarelo para valores menores que 15
-                            } else if (value > 30) {
+                            } else if (value > 40) {
                                 return 'rgba(255, 82, 82, 0.6)'; // Vermelho para valores maiores que 40
                             }
                             return 'rgba(76, 175, 80, 0.6)'; // Verde para outros valores
