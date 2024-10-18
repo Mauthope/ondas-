@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gráfico de Amplitude Ajustável</title>
+    <title>Gráfico de Amplitude com Ajuste</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -36,16 +36,10 @@
         const numWaves = 60; // Total de cristas (60)
         let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25); // Inicialmente todas as alturas são 25
 
-        // Ajusta 15 cristas aleatórias para valores entre 20 e 30
+        // Ajusta 15 cristas aleatórias para valores entre -10 e 30
         for (let i = 0; i < 15; i++) {
             const randomIndex = Math.floor(Math.random() * numWaves) * 2 + 1; // Seleciona um índice de crista aleatório
-            waves[randomIndex] = Math.round(Math.random() * 10 + 20); // Gera valores entre 20 e 30 arredondados
-        }
-
-        // Adiciona algumas barras negativas para criar um desafio
-        for (let i = 0; i < 5; i++) {
-            const randomNegativeIndex = Math.floor(Math.random() * numWaves) * 2 + 1; // Seleciona um índice de crista aleatório
-            waves[randomNegativeIndex] = Math.round(Math.random() * 10 - 25); // Gera valores entre -25 e -15 arredondados
+            waves[randomIndex] = Math.round(Math.random() * 40 - 10); // Gera valores entre -10 e 30 arredondados
         }
 
         function generateWavePoints() {
@@ -62,12 +56,6 @@
             return points;
         }
 
-        function getBarColor(value) {
-            if (value < 0) return 'red'; // Vermelho para barras negativas
-            if (value > 30 || value < 20) return 'yellow'; // Amarelo para barras fora da média
-            return 'rgba(66, 165, 245, 1)'; // Azul padrão
-        }
-
         function drawChart() {
             const points = generateWavePoints();
             const ctx = document.getElementById('wavesCanvas').getContext('2d');
@@ -80,8 +68,14 @@
                         {
                             label: 'Altura das Ondas',
                             data: points.map(point => point.y),
-                            backgroundColor: points.map(point => getBarColor(point.y)), // Cor baseada no valor
-                            borderColor: points.map(point => getBarColor(point.y)), // Cor da borda baseada no valor
+                            backgroundColor: points.map(point => {
+                                if (point.y < 0) return 'rgba(255, 99, 132, 0.2)'; // Vermelho para negativos
+                                return Math.abs(point.y - 25) > 5 ? 'rgba(255, 206, 86, 0.5)' : 'rgba(66, 165, 245, 0.2)'; // Amarelo para fora da média
+                            }),
+                            borderColor: points.map(point => {
+                                if (point.y < 0) return 'rgba(255, 99, 132, 1)'; // Vermelho para negativos
+                                return Math.abs(point.y - 25) > 5 ? 'rgba(255, 206, 86, 1)' : 'rgba(66, 165, 245, 1)'; // Amarelo para fora da média
+                            }),
                             borderWidth: 2,
                             pointRadius: points.map(point => (point.x % 1 === 0.5 ? 3 : 0)), // Bolinhas menores e apenas nas cristas
                             pointBackgroundColor: points.map(point => (point.x % 1 === 0.5 ? 'red' : 'rgba(66, 165, 245, 1)')),
@@ -122,7 +116,7 @@
                                     size: 16
                                 }
                             },
-                            min: -30, // Ajuste do mínimo para incluir valores negativos
+                            min: -10,
                             max: 75
                         }
                     },
@@ -154,13 +148,13 @@
                 const selectedPoint = waveChartInstance.data.labels[pointIndex];
                 
                 if (selectedPoint % 1 === 0.5) {
-                    const newHeight = parseFloat(prompt('Digite a nova altura para a crista (20-30):'));
-                    if (!isNaN(newHeight) && newHeight >= -30 && newHeight <= 30) {
+                    const newHeight = parseFloat(prompt('Digite a nova altura para a crista (entre -10 e 30):'));
+                    if (!isNaN(newHeight) && newHeight >= -10 && newHeight <= 30) {
                         adjustCrista(Math.floor(selectedPoint), newHeight);
                         waveChartInstance.destroy();
                         waveChartInstance = drawChart();
                     } else {
-                        alert('Por favor, insira um valor entre -30 e 30.');
+                        alert('Por favor, insira um valor entre -10 e 30.');
                     }
                 }
             }
@@ -188,7 +182,7 @@
                 waves[i] = 25;
             }
 
-            waves = waves.map(val => Math.max(-30, Math.min(50, val))); // Ajusta os limites
+            waves = waves.map(val => Math.max(-10, Math.min(50, val)));
         }
 
         waveChartInstance.update();
