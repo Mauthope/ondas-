@@ -18,12 +18,17 @@
         #amplitudeChart {
             width: 95%;
             max-width: 1200px;
-            background: white;
+            background: black; /* Alterado para fundo preto */
             border-radius: 10px;
             box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
             padding: 20px;
             margin-bottom: 20px;
             height: 400px;
+        }
+
+        /* Estilo para texto do gráfico */
+        .chartjs-render-monitor {
+            color: white; /* Alterado para caracteres brancos */
         }
     </style>
 </head>
@@ -46,7 +51,16 @@
                     datasets: [{
                         label: 'Amplitude',
                         data: amplitudes,
-                        backgroundColor: amplitudes.map(value => value >= 0 ? 'rgba(66, 165, 245, 0.6)' : 'rgba(255, 82, 82, 0.6)'),
+                        backgroundColor: amplitudes.map(value => {
+                            if (value < 0) {
+                                return 'rgba(255, 82, 82, 0.6)'; // Vermelho para valores negativos
+                            } else if (value < 15) {
+                                return 'rgba(255, 255, 0, 0.6)'; // Amarelo para valores menores que 15
+                            } else if (value > 40) {
+                                return 'rgba(255, 82, 82, 0.6)'; // Vermelho para valores maiores que 40
+                            }
+                            return 'rgba(76, 175, 80, 0.6)'; // Verde para outros valores
+                        }),
                     }]
                 },
                 options: {
@@ -57,29 +71,40 @@
                                 display: true,
                                 text: 'Barras',
                                 font: {
-                                    size: 16
+                                    size: 16,
+                                    color: 'white' // Texto dos eixos em branco
                                 }
                             },
                             min: 0,
-                            max: numBars + 1
+                            max: numBars + 1,
+                            ticks: {
+                                color: 'white' // Cor das marcas do eixo x
+                            }
                         },
                         y: {
                             title: {
                                 display: true,
                                 text: 'Amplitude',
                                 font: {
-                                    size: 16
+                                    size: 16,
+                                    color: 'white' // Texto dos eixos em branco
                                 }
                             },
                             min: -10,
-                            max: 50
+                            max: 50,
+                            ticks: {
+                                color: 'white' // Cor das marcas do eixo y
+                            }
                         }
                     },
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: true
+                            display: true,
+                            labels: {
+                                color: 'white' // Cor das legendas
+                            }
                         }
                     }
                 }
