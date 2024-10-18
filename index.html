@@ -33,46 +33,31 @@
     </div>
 
     <script>
-        const numWaves = 60; // Total de cristas (60)
-        let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25); // Inicialmente todas as alturas são 25
+        const numWaves = 30; // Total de cristas (30)
+        let waves = Array.from({ length: numWaves }, () => 25);
 
         // Ajusta 15 cristas aleatórias para valores entre 20 e 30
         for (let i = 0; i < 15; i++) {
-            const randomIndex = Math.floor(Math.random() * numWaves) * 2 + 1; // Seleciona um índice de crista aleatório
-            waves[randomIndex] = Math.round(Math.random() * 10 + 20); // Gera valores entre 20 e 30 arredondados
-        }
-
-        function generateWavePoints() {
-            const points = [];
-            for (let i = 0; i < numWaves; i++) {
-                const base = i;
-                const peak = base + 0.5;
-                const end = base + 1;
-
-                points.push({ x: base, y: waves[i * 2] });
-                points.push({ x: peak, y: waves[i * 2 + 1] });
-                points.push({ x: end, y: waves[(i + 1) * 2] });
-            }
-            return points;
+            const randomIndex = Math.floor(Math.random() * numWaves);
+            waves[randomIndex] = Math.round(Math.random() * 10 + 20);
         }
 
         function drawChart() {
-            const points = generateWavePoints();
             const ctx = document.getElementById('wavesCanvas').getContext('2d');
 
             const waveChart = new Chart(ctx, {
                 type: 'bar',
                 data: {
-                    labels: points.map(point => point.x.toFixed(2)),
+                    labels: waves.map((_, index) => `Onda ${index + 1}`),
                     datasets: [
                         {
                             label: 'Altura das Ondas',
-                            data: points.map(point => point.y - 25),
-                            backgroundColor: points.map(point =>
-                                point.y > 25 ? 'rgba(66, 165, 245, 0.7)' : 'rgba(255, 99, 132, 0.7)'
+                            data: waves.map(val => val - 25), // Subtrai 25 para que 0 represente o ponto inicial
+                            backgroundColor: waves.map(val =>
+                                val > 25 ? 'rgba(66, 165, 245, 0.7)' : 'rgba(255, 99, 132, 0.7)'
                             ),
-                            borderColor: points.map(point =>
-                                point.y > 25 ? 'rgba(66, 165, 245, 1)' : 'rgba(255, 99, 132, 1)'
+                            borderColor: waves.map(val =>
+                                val > 25 ? 'rgba(66, 165, 245, 1)' : 'rgba(255, 99, 132, 1)'
                             ),
                             borderWidth: 1
                         }
@@ -87,11 +72,6 @@
                                 font: {
                                     size: 16
                                 }
-                            },
-                            min: 0,
-                            max: numWaves,
-                            ticks: {
-                                stepSize: 1
                             }
                         },
                         y: {
@@ -102,8 +82,8 @@
                                     size: 16
                                 }
                             },
-                            min: -25,
-                            max: 50
+                            min: -10,
+                            max: 10
                         }
                     },
                     responsive: true,
@@ -133,42 +113,19 @@
                 const pointIndex = points[0].index;
                 const selectedPoint = waveChartInstance.data.labels[pointIndex];
                 
-                if (selectedPoint % 1 === 0.5) {
-                    const newHeight = parseFloat(prompt('Digite a nova altura para a crista (20-30):'));
-                    if (!isNaN(newHeight) && newHeight >= 20 && newHeight <= 30) {
-                        adjustCrista(Math.floor(selectedPoint), newHeight);
-                        waveChartInstance.destroy();
-                        waveChartInstance = drawChart();
-                    } else {
-                        alert('Por favor, insira um valor entre 20 e 30.');
-                    }
+                const newHeight = parseFloat(prompt('Digite a nova altura para a crista (20-30):'));
+                if (!isNaN(newHeight) && newHeight >= 20 && newHeight <= 30) {
+                    adjustCrista(pointIndex, newHeight);
+                    waveChartInstance.destroy();
+                    waveChartInstance = drawChart();
+                } else {
+                    alert('Por favor, insira um valor entre 20 e 30.');
                 }
             }
         });
 
         function adjustCrista(index, newHeight) {
-            const peakIndex = index * 2 + 1;
-            const amplitudeChange = newHeight - waves[peakIndex];
-
-            waves[peakIndex] = newHeight;
-
-            const influenceRadius = 5;
-            for (let i = 1; i <= influenceRadius; i++) {
-                const factor = (1 - i / (influenceRadius + 1));
-
-                if (peakIndex - i >= 0) {
-                    waves[peakIndex - i] += amplitudeChange * factor;
-                }
-                if (peakIndex + i < waves.length) {
-                    waves[peakIndex + i] += amplitudeChange * factor;
-                }
-            }
-
-            for (let i = 0; i < waves.length; i += 2) {
-                waves[i] = 25;
-            }
-
-            waves = waves.map(val => Math.max(0, Math.min(50, val)));
+            waves[index] = newHeight;
         }
 
         waveChartInstance.update();
