@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gráfico de Amplitude com Ajuste</title>
+    <title>Gráfico de Amplitude Ajustável</title>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
@@ -15,7 +15,7 @@
             padding: 20px;
         }
 
-        #waveChart {
+        #amplitudeChart {
             width: 95%;
             max-width: 1200px;
             background: white;
@@ -28,164 +28,108 @@
     </style>
 </head>
 <body>
-    <div id="waveChart">
-        <canvas id="wavesCanvas"></canvas>
+    <div id="amplitudeChart">
+        <canvas id="amplitudeCanvas"></canvas>
     </div>
 
     <script>
-        const numWaves = 60; // Total de cristas (60)
-        let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25); // Inicialmente todas as alturas são 25
-
-        // Ajusta 15 cristas aleatórias para valores entre -10 e 30
-        for (let i = 0; i < 15; i++) {
-            const randomIndex = Math.floor(Math.random() * numWaves) * 2 + 1; // Seleciona um índice de crista aleatório
-            waves[randomIndex] = Math.round(Math.random() * 40 - 10); // Gera valores entre -10 e 30 arredondados
-        }
-
-        function generateWavePoints() {
-            const points = [];
-            for (let i = 0; i < numWaves; i++) {
-                const base = i;
-                const peak = base + 0.5;
-                const end = base + 1;
-
-                points.push({ x: base, y: waves[i * 2] });
-                points.push({ x: peak, y: waves[i * 2 + 1] });
-                points.push({ x: end, y: waves[(i + 1) * 2] });
-            }
-            return points;
-        }
+        const numBars = 60; // Número total de barras
+        let amplitudes = Array.from({ length: numBars }, () => Math.floor(Math.random() * 10) + 20); // Valores iniciais aleatórios entre 20 e 30
 
         function drawChart() {
-            const points = generateWavePoints();
-            const ctx = document.getElementById('wavesCanvas').getContext('2d');
+            const ctx = document.getElementById('amplitudeCanvas').getContext('2d');
 
-            const waveChart = new Chart(ctx, {
-                type: 'line',
+            const amplitudeChart = new Chart(ctx, {
+                type: 'bar',
                 data: {
-                    labels: points.map(point => point.x.toFixed(2)),
-                    datasets: [
-                        {
-                            label: 'Altura das Ondas',
-                            data: points.map(point => point.y),
-                            backgroundColor: points.map(point => {
-                                if (point.y < 0) return 'rgba(255, 99, 132, 0.2)'; // Vermelho para negativos
-                                return Math.abs(point.y - 25) > 5 ? 'rgba(255, 206, 86, 0.5)' : 'rgba(66, 165, 245, 0.2)'; // Amarelo para fora da média
-                            }),
-                            borderColor: points.map(point => {
-                                if (point.y < 0) return 'rgba(255, 99, 132, 1)'; // Vermelho para negativos
-                                return Math.abs(point.y - 25) > 5 ? 'rgba(255, 206, 86, 1)' : 'rgba(66, 165, 245, 1)'; // Amarelo para fora da média
-                            }),
-                            borderWidth: 2,
-                            pointRadius: points.map(point => (point.x % 1 === 0.5 ? 3 : 0)), // Bolinhas menores e apenas nas cristas
-                            pointBackgroundColor: points.map(point => (point.x % 1 === 0.5 ? 'red' : 'rgba(66, 165, 245, 1)')),
-                            tension: 0.4,
-                        },
-                        {
-                            label: 'Linha de Referência (25)',
-                            data: new Array(points.length).fill(25),
-                            borderColor: 'red',
-                            borderWidth: 1,
-                            borderDash: [5, 5],
-                            fill: false,
-                            pointRadius: 0 // Sem bolinhas na linha de referência
-                        }
-                    ]
+                    labels: amplitudes.map((_, index) => index + 1),
+                    datasets: [{
+                        label: 'Amplitude',
+                        data: amplitudes,
+                        backgroundColor: amplitudes.map(value => value >= 0 ? 'rgba(66, 165, 245, 0.6)' : 'rgba(255, 82, 82, 0.6)'),
+                    }]
                 },
                 options: {
                     scales: {
                         x: {
                             title: {
                                 display: true,
-                                text: 'Número da Onda',
+                                text: 'Barras',
                                 font: {
                                     size: 16
                                 }
                             },
                             min: 0,
-                            max: numWaves,
-                            ticks: {
-                                stepSize: 1
-                            }
+                            max: numBars + 1
                         },
                         y: {
                             title: {
                                 display: true,
-                                text: 'Altura',
+                                text: 'Amplitude',
                                 font: {
                                     size: 16
                                 }
                             },
                             min: -10,
-                            max: 75
+                            max: 50
                         }
                     },
                     responsive: true,
                     maintainAspectRatio: false,
                     plugins: {
                         legend: {
-                            display: true,
-                            labels: {
-                                font: {
-                                    size: 14
-                                }
-                            }
+                            display: true
                         }
-                    },
-                    animation: false // Desativa animações para evitar movimento ao atualizar o gráfico
+                    }
                 }
             });
 
-            return waveChart;
+            return amplitudeChart;
         }
 
-        let waveChartInstance = drawChart();
+        let amplitudeChartInstance = drawChart();
 
-        document.getElementById('wavesCanvas').addEventListener('click', (event) => {
-            const points = waveChartInstance.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+        document.getElementById('amplitudeCanvas').addEventListener('click', (event) => {
+            const points = amplitudeChartInstance.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
             if (points.length) {
                 const pointIndex = points[0].index;
-                const selectedPoint = waveChartInstance.data.labels[pointIndex];
+                const newHeight = parseInt(prompt('Digite a nova amplitude para a barra (0-50):'), 10);
                 
-                if (selectedPoint % 1 === 0.5) {
-                    const newHeight = parseFloat(prompt('Digite a nova altura para a crista (entre -10 e 30):'));
-                    if (!isNaN(newHeight) && newHeight >= -10 && newHeight <= 30) {
-                        adjustCrista(Math.floor(selectedPoint), newHeight);
-                        waveChartInstance.destroy();
-                        waveChartInstance = drawChart();
-                    } else {
-                        alert('Por favor, insira um valor entre -10 e 30.');
-                    }
+                if (!isNaN(newHeight) && newHeight >= 0 && newHeight <= 50) {
+                    adjustAmplitude(pointIndex, newHeight);
+                    amplitudeChartInstance.destroy();
+                    amplitudeChartInstance = drawChart();
+                } else {
+                    alert('Por favor, insira um valor entre 0 e 50.');
                 }
             }
         });
 
-        function adjustCrista(index, newHeight) {
-            const peakIndex = index * 2 + 1;
-            const amplitudeChange = newHeight - waves[peakIndex];
+        function adjustAmplitude(index, newHeight) {
+            const amplitudeChange = newHeight - amplitudes[index];
+            amplitudes[index] = newHeight;
 
-            waves[peakIndex] = newHeight;
-
-            const influenceRadius = 5;
-            for (let i = 1; i <= influenceRadius; i++) {
-                const factor = (1 - i / (influenceRadius + 1));
-
-                if (peakIndex - i >= 0) {
-                    waves[peakIndex - i] += amplitudeChange * factor;
+            // Ajusta as barras vizinhas
+            const adjustNeighbors = (index, change) => {
+                if (index > 0) {
+                    const neighborChange = change * 0.5; // Ajusta proporcionalmente
+                    amplitudes[index - 1] += neighborChange;
                 }
-                if (peakIndex + i < waves.length) {
-                    waves[peakIndex + i] += amplitudeChange * factor;
+                if (index < amplitudes.length - 1) {
+                    const neighborChange = change * 0.5; // Ajusta proporcionalmente
+                    amplitudes[index + 1] += neighborChange;
                 }
             }
 
-            for (let i = 0; i < waves.length; i += 2) {
-                waves[i] = 25;
+            adjustNeighbors(index, amplitudeChange);
+            
+            // Garante que as amplitudes não fiquem fora do limite
+            for (let i = 0; i < amplitudes.length; i++) {
+                amplitudes[i] = Math.max(-10, Math.min(50, amplitudes[i]));
             }
-
-            waves = waves.map(val => Math.max(-10, Math.min(50, val)));
         }
 
-        waveChartInstance.update();
+        amplitudeChartInstance.update();
     </script>
 </body>
 </html>
