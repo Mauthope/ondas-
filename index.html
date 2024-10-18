@@ -3,140 +3,133 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gráfico de Amplitude</title>
+    <title>Gráfico de Amplitude Ajustável</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
-        /* CSS para estilização */
         body {
+            font-family: 'Arial', sans-serif;
+            background-color: #e3f2fd;
             display: flex;
             flex-direction: column;
             align-items: center;
+            padding: 20px;
         }
-        #chart-container {
-            display: flex;
-            justify-content: center;
-            align-items: flex-end;
+
+        #amplitudeChart {
+            width: 95%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+            margin-bottom: 20px;
             height: 400px;
-            width: 100%;
-            margin-top: 20px;
-            border: 1px solid #ddd;
-            position: relative;
-        }
-        .bar {
-            width: 30px;
-            background-color: #3498db;
-            margin: 0 5px;
-            cursor: pointer;
-            transition: height 0.2s, margin-bottom 0.2s;
-            position: relative;
-        }
-        .bar.negative {
-            background-color: #e74c3c;
-            bottom: 0; /* Posiciona a barra negativa a partir do fundo */
         }
     </style>
 </head>
 <body>
-    <div id="chart-container"></div>
+    <div id="amplitudeChart">
+        <canvas id="amplitudeCanvas"></canvas>
+    </div>
+
     <script>
-        // JavaScript para gerar e controlar o gráfico
-        const chartContainer = document.getElementById('chart-container');
-        const numBars = 10;
-        const bars = [];
-        const minAmplitude = -50;
-        const maxAmplitude = 50;
+        const numBars = 20; // Número total de barras
+        let amplitudes = Array.from({ length: numBars }, () => Math.floor(Math.random() * 10) + 20); // Valores iniciais aleatórios entre 20 e 30
 
-        // Função para gerar valores aleatórios com suavidade
-        function generateRandomValues() {
-            let values = [];
-            for (let i = 0; i < numBars; i++) {
-                let randomValue = Math.floor(Math.random() * 10) + 20; // Valores entre 20 e 30
-                randomValue *= Math.random() > 0.5 ? 1 : -1; // Aleatoriamente positivo ou negativo
-                values.push(randomValue);
-            }
-            return values;
-        }
+        function drawChart() {
+            const ctx = document.getElementById('amplitudeCanvas').getContext('2d');
 
-        // Função para criar o gráfico
-        function createChart(values) {
-            chartContainer.innerHTML = ''; // Limpa o container
-            values.forEach((value, index) => {
-                const bar = document.createElement('div');
-                bar.classList.add('bar');
-                bar.style.height = `${Math.abs(value)}%`;
-                bar.classList.toggle('negative', value < 0);
-                bar.dataset.value = value;
-                bar.dataset.index = index;
-
-                // Define a posição da barra negativa
-                if (value < 0) {
-                    bar.style.marginBottom = `${Math.abs(value)}%`;
+            const amplitudeChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: amplitudes.map((_, index) => index + 1),
+                    datasets: [{
+                        label: 'Amplitude',
+                        data: amplitudes,
+                        backgroundColor: amplitudes.map(value => value >= 0 ? 'rgba(66, 165, 245, 0.6)' : 'rgba(255, 82, 82, 0.6)'),
+                    }]
+                },
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Barras',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            min: 0,
+                            max: numBars + 1
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Amplitude',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            min: -10,
+                            max: 50
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true
+                        }
+                    }
                 }
-
-                bar.addEventListener('click', () => editBar(index));
-                chartContainer.appendChild(bar);
-                bars.push(bar);
             });
+
+            return amplitudeChart;
         }
 
-        // Função para editar a barra selecionada
-        function editBar(index) {
-            const currentBar = bars[index];
-            const currentValue = parseInt(currentBar.dataset.value, 10);
-            const newValue = parseInt(prompt('Digite o novo valor da barra:', currentValue), 10);
-            if (isNaN(newValue)) return;
+        let amplitudeChartInstance = drawChart();
 
-            // Calcula a diferença e distribui para as vizinhas
-            const difference = currentValue - newValue;
-            distributeDifference(index, difference);
-
-            // Atualiza os valores e o gráfico
-            updateChart();
-        }
-
-        // Função para distribuir a diferença entre as barras vizinhas
-        function distributeDifference(index, difference) {
-            const leftIndex = index > 0 ? index - 1 : null;
-            const rightIndex = index < bars.length - 1 ? index + 1 : null;
-
-            if (leftIndex !== null && rightIndex !== null) {
-                adjustBarValue(leftIndex, difference / 2);
-                adjustBarValue(rightIndex, difference / 2);
-            } else if (leftIndex !== null) {
-                adjustBarValue(leftIndex, difference);
-            } else if (rightIndex !== null) {
-                adjustBarValue(rightIndex, difference);
-            }
-        }
-
-        // Função para ajustar o valor da barra e garantir que o valor esteja dentro dos limites
-        function adjustBarValue(index, adjustment) {
-            const bar = bars[index];
-            let newValue = parseInt(bar.dataset.value, 10) + adjustment;
-
-            // Ajusta a amplitude conforme o valor positivo ou negativo
-            newValue = newValue > maxAmplitude ? maxAmplitude : newValue < minAmplitude ? minAmplitude : newValue;
-            bar.dataset.value = newValue;
-        }
-
-        // Função para atualizar o gráfico após edições
-        function updateChart() {
-            bars.forEach(bar => {
-                const value = parseInt(bar.dataset.value, 10);
-                bar.style.height = `${Math.abs(value)}%`;
-
-                if (value < 0) {
-                    bar.style.marginBottom = `${Math.abs(value)}%`;
-                    bar.classList.add('negative');
+        document.getElementById('amplitudeCanvas').addEventListener('click', (event) => {
+            const points = amplitudeChartInstance.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+            if (points.length) {
+                const pointIndex = points[0].index;
+                const newHeight = parseInt(prompt('Digite a nova amplitude para a barra (0-50):'), 10);
+                
+                if (!isNaN(newHeight) && newHeight >= 0 && newHeight <= 50) {
+                    adjustAmplitude(pointIndex, newHeight);
+                    amplitudeChartInstance.destroy();
+                    amplitudeChartInstance = drawChart();
                 } else {
-                    bar.style.marginBottom = '0'; // Remove margem para barras positivas
-                    bar.classList.remove('negative');
+                    alert('Por favor, insira um valor entre 0 e 50.');
                 }
-            });
+            }
+        });
+
+        function adjustAmplitude(index, newHeight) {
+            const amplitudeChange = newHeight - amplitudes[index];
+            amplitudes[index] = newHeight;
+
+            // Ajusta as barras vizinhas
+            const adjustNeighbors = (index, change) => {
+                if (index > 0) {
+                    const neighborChange = change * 0.5; // Ajusta proporcionalmente
+                    amplitudes[index - 1] += neighborChange;
+                }
+                if (index < amplitudes.length - 1) {
+                    const neighborChange = change * 0.5; // Ajusta proporcionalmente
+                    amplitudes[index + 1] += neighborChange;
+                }
+            }
+
+            adjustNeighbors(index, amplitudeChange);
+            
+            // Garante que as amplitudes não fiquem fora do limite
+            for (let i = 0; i < amplitudes.length; i++) {
+                amplitudes[i] = Math.max(-10, Math.min(50, amplitudes[i]));
+            }
         }
 
-        // Gera os valores iniciais e cria o gráfico
-        const initialValues = generateRandomValues();
-        createChart(initialValues);
+        amplitudeChartInstance.update();
     </script>
 </body>
 </html>
