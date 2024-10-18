@@ -34,7 +34,7 @@
 
     <script>
         const numBars = 60; // Número total de barras
-        let amplitudes = Array.from({ length: numBars }, () => Math.floor(Math.random() * 20) - 10); // Valores iniciais aleatórios entre -10 e 10
+        let amplitudes = Array.from({ length: numBars }, () => Math.floor(Math.random() * 10) + 20); // Valores iniciais aleatórios entre 20 e 30
 
         function drawChart() {
             const ctx = document.getElementById('amplitudeCanvas').getContext('2d');
@@ -46,11 +46,10 @@
                     datasets: [{
                         label: 'Amplitude',
                         data: amplitudes,
-                        backgroundColor: amplitudes.map(value => value < 0 ? 'rgba(255, 82, 82, 0.6)' : 'rgba(76, 175, 80, 0.6)'),
+                        backgroundColor: amplitudes.map(value => value >= 0 ? 'rgba(66, 165, 245, 0.6)' : 'rgba(255, 82, 82, 0.6)'),
                     }]
                 },
                 options: {
-                    animation: false, // Remove o efeito de transição
                     scales: {
                         x: {
                             title: {
@@ -71,8 +70,8 @@
                                     size: 16
                                 }
                             },
-                            min: -20,
-                            max: 20
+                            min: -10,
+                            max: 50
                         }
                     },
                     responsive: true,
@@ -94,14 +93,14 @@
             const points = amplitudeChartInstance.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
             if (points.length) {
                 const pointIndex = points[0].index;
-                const newHeight = parseInt(prompt('Digite a nova amplitude para a barra (0-20):'), 10);
+                const newHeight = parseInt(prompt('Digite a nova amplitude para a barra (0-50):'), 10);
                 
-                if (!isNaN(newHeight) && newHeight >= -20 && newHeight <= 20) {
+                if (!isNaN(newHeight) && newHeight >= 0 && newHeight <= 50) {
                     adjustAmplitude(pointIndex, newHeight);
                     amplitudeChartInstance.destroy();
                     amplitudeChartInstance = drawChart();
                 } else {
-                    alert('Por favor, insira um valor entre -20 e 20.');
+                    alert('Por favor, insira um valor entre 0 e 50.');
                 }
             }
         });
@@ -126,7 +125,7 @@
             
             // Garante que as amplitudes não fiquem fora do limite
             for (let i = 0; i < amplitudes.length; i++) {
-                amplitudes[i] = Math.max(-20, Math.min(20, amplitudes[i]));
+                amplitudes[i] = Math.max(-10, Math.min(50, amplitudes[i]));
             }
         }
 
