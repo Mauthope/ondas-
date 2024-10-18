@@ -1,68 +1,176 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Controle de Produção de OP</title>
+    <title>Modelo de Barras com Ajuste por Altura</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         body {
-            font-family: 'Roboto', sans-serif;
-            margin: 20px;
-            background-color: #f4f6f9;
-            color: #333;
+            font-family: 'Arial', sans-serif;
+            background-color: #e3f2fd;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
         }
 
-        h1 {
-            color: #3f51b5;
-            text-align: center;
-            font-size: 2.5em;
-            font-weight: bold;
+        #waveChart {
+            width: 95%;
+            max-width: 1200px;
+            background: white;
+            border-radius: 10px;
+            box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.1);
+            padding: 20px;
             margin-bottom: 20px;
-        }
-
-        .chart-container {
-            width: 80%;
-            margin: 0 auto;
-            margin-top: 20px;
+            height: 400px;
         }
     </style>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
-    <h1>Controle de Produção</h1>
-
-    <div class="chart-container">
-        <canvas id="myChart"></canvas>
+    <div id="waveChart">
+        <canvas id="wavesCanvas"></canvas>
     </div>
 
     <script>
-        const ctx = document.getElementById('myChart').getContext('2d');
-        const data = [15, 30, 20, 35, 10, 50, 25]; // Exemplo de dados para o gráfico
+        const numWaves = 60; // Total de barras (60)
+        let waves = Array.from({ length: numWaves * 2 + 1 }, () => 25); // Inicialmente todas as alturas são 25
 
-        const myChart = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul'],
-                datasets: [{
-                    data: data,
-                    backgroundColor: data.map(value => value < 25 ? 'red' : 'green'),
-                }]
-            },
-            options: {
-                scales: {
-                    y: {
-                        display: false // Remove os números do eixo Y
-                    }
+        // Ajusta 15 barras aleatórias para valores entre 20 e 30
+        for (let i = 0; i < 15; i++) {
+            const randomIndex = Math.floor(Math.random() * numWaves) * 2 + 1; // Seleciona um índice de crista aleatório
+            waves[randomIndex] = Math.round(Math.random() * 10 + 20); // Gera valores entre 20 e 30 arredondados
+        }
+
+        function generateBarPoints() {
+            const points = [];
+            for (let i = 0; i < numWaves; i++) {
+                const base = i;
+                const peak = waves[i * 2 + 1]; // Altura da barra
+
+                points.push({ x: base, y: peak });
+            }
+            return points;
+        }
+
+        function drawChart() {
+            const points = generateBarPoints();
+            const ctx = document.getElementById('wavesCanvas').getContext('2d');
+
+            const waveChart = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: points.map(point => `Barra ${point.x + 1}`),
+                    datasets: [
+                        {
+                            label: 'Altura das Barras',
+                            data: points.map(point => point.y),
+                            backgroundColor: 'rgba(66, 165, 245, 0.6)',
+                            borderColor: 'rgba(66, 165, 245, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Linha de Referência (25)',
+                            data: new Array(points.length).fill(25),
+                            borderColor: 'red',
+                            borderWidth: 1,
+                            borderDash: [5, 5],
+                            type: 'line',
+                            fill: false,
+                            pointRadius: 0
+                        }
+                    ]
                 },
-                plugins: {
-                    legend: {
-                        display: false // Remove a legenda
-                    }
-                },
-                responsive: true,
-                maintainAspectRatio: false
+                options: {
+                    scales: {
+                        x: {
+                            title: {
+                                display: true,
+                                text: 'Número da Barra',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            ticks: {
+                                autoSkip: false
+                            }
+                        },
+                        y: {
+                            title: {
+                                display: true,
+                                text: 'Altura',
+                                font: {
+                                    size: 16
+                                }
+                            },
+                            min: 0,
+                            max: 75
+                        }
+                    },
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            labels: {
+                                font: {
+                                    size: 14
+                                }
+                            }
+                        }
+                    },
+                    animation: false
+                }
+            });
+
+            return waveChart;
+        }
+
+        let waveChartInstance = drawChart();
+
+        document.getElementById('wavesCanvas').addEventListener('click', (event) => {
+            const points = waveChartInstance.getElementsAtEventForMode(event, 'nearest', { intersect: true }, false);
+            if (points.length) {
+                const pointIndex = points[0].index;
+                const selectedPoint = waveChartInstance.data.labels[pointIndex];
+
+                const newHeight = parseFloat(prompt('Digite a nova altura para a barra (20-30):'));
+                if (!isNaN(newHeight) && newHeight >= 20 && newHeight <= 30) {
+                    adjustBar(pointIndex, newHeight);
+                    waveChartInstance.destroy();
+                    waveChartInstance = drawChart();
+                } else {
+                    alert('Por favor, insira um valor entre 20 e 30.');
+                }
             }
         });
+
+        function adjustBar(index, newHeight) {
+            const peakIndex = index * 2 + 1;
+            const amplitudeChange = newHeight - waves[peakIndex];
+
+            waves[peakIndex] = newHeight;
+
+            const influenceRadius = 5;
+            for (let i = 1; i <= influenceRadius; i++) {
+                const factor = (1 - i / (influenceRadius + 1));
+
+                if (peakIndex - i >= 0) {
+                    waves[peakIndex - i] += amplitudeChange * factor;
+                }
+                if (peakIndex + i < waves.length) {
+                    waves[peakIndex + i] += amplitudeChange * factor;
+                }
+            }
+
+            for (let i = 0; i < waves.length; i += 2) {
+                waves[i] = 25;
+            }
+
+            waves = waves.map(val => Math.max(0, Math.min(50, val)));
+        }
+
+        waveChartInstance.update();
     </script>
 </body>
 </html>
